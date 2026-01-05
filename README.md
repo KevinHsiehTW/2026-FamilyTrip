@@ -34,12 +34,20 @@
 
 ## 🚀 自動部署 (Deployment)
 
-本專案已設定 GitHub Actions，當推送到 `main` 分支時會自動部署至 GitHub Pages。
+本專案建議使用 **Netlify** 進行部署。
 
-1.  確認 GitHub 儲存庫設定：
-    *   進入 Settings > Pages
-    *   Build and deployment source 選擇 **GitHub Actions**
-2.  推送程式碼後，Action 會自動執行並部署。
+1.  **新增網站**:
+    *   登入 Netlify 並選擇 "Add new site" > "Import an existing project"。
+    *   連結您的 GitHub 儲存庫。
+
+2.  **確認設定**:
+    *   Netlify 會自動讀取 `netlify.toml` 設定檔。
+    *   **Build command**: `npm run build`
+    *   **Publish directory**: `dist`
+
+3.  **部署**:
+    *   點擊 "Deploy site" 即可。
+    *   後續只要推送到 GitHub，Netlify 就會自動重新部署。
 
 ---
 
@@ -76,35 +84,27 @@
 
 ### 1. 設定管理員權限 (Admin Access)
 為了防止行程被誤刪或隨意修改，行程編輯功能僅限「管理員」使用。
-**請務必修改 `App.tsx` 中的設定：**
+請在 `.env` 或 Netlify 環境變數中設定 `VITE_ADMIN_EMAILS`，多個 Email 請以逗號分隔。
 
-```typescript
-// App.tsx
-// TODO: 請將您的 Google Email 加入此陣列
-const ADMIN_EMAILS = [
-  "your.actual.email@gmail.com", 
-  "another.admin@example.com"
-];
+```bash
+VITE_ADMIN_EMAILS=kevin@example.com,wife@example.com
 ```
 
 *   如果您的 Email 不在列表中，登入後將**看不到**編輯按鈕與新增按鈕。
 
-### 2. Firebase 連線設定
-專案目前使用佔位符，若要啟用「登入」與「許願池」功能，需在 Firebase Console 建立專案並替換設定。
+### 2. 環境變數設定 (Environment Variables)
 
-1.  前往 [Firebase Console](https://console.firebase.google.com/)。
-2.  建立新專案，啟用 **Authentication** (Google Sign-In) 與 **Firestore Database**。
-3.  複製設定檔並貼上至 `firebase.ts`：
+為了安全起見，請勿將 API Key 直接提交到版本控制系統。
+本專案使用 `.env` 檔案管理敏感資訊。
 
-```typescript
-// firebase.ts
-const firebaseConfig = {
-  apiKey: "您的_API_KEY",
-  authDomain: "您的專案.firebaseapp.com",
-  projectId: "您的專案ID",
-  // ... 其他設定
-};
-```
+1.  **複製範本**:
+    ```bash
+    cp .env.example .env
+    ```
+2.  **填入數值**: 在 `.env` 中填入您的 Firebase 設定。
+3.  **Netlify 部署設定**:
+    *   在 Netlify 後台，進入 **Site configuration** > **Environment variables**。
+    *   新增上述變數 (如 `VITE_FIREBASE_API_KEY` 等) 與對應數值。
 
 ---
 
