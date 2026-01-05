@@ -631,6 +631,7 @@ const LoginView = ({ onLogin }: { onLogin: () => Promise<void> }) => {
 export default function App() {
     const [activeTab, setActiveTab] = useState<Tab>('itinerary');
     const [user, setUser] = useState<FirebaseUser | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [appLoading, setAppLoading] = useState(true);
     const [itineraryData, setItineraryData] = useState(MOCK_ITINERARY);
 
@@ -641,8 +642,23 @@ export default function App() {
             setAppLoading(false);
             return;
         }
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+            if (currentUser && currentUser.email) {
+                try {
+                    const res = await fetch('/.netlify/functions/verify-admin', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: currentUser.email })
+                    });
+                    const data = await res.json();
+                    setIsAdmin(!!data.isAdmin);
+                } catch (e) {
+                    console.error("Admin verification failed", e);
+                    setIsAdmin(false);
+                }
+            } else {
+                setIsAdmin(false);
+            }
             setAppLoading(false);
         });
         return () => unsubscribe();

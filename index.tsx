@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { initializeFirebase } from './firebase';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -9,8 +10,13 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
+
+// Initialize Firebase before rendering the app
+// This ensures we have the config loaded (or failed gracefully)
+initializeFirebase().then(() => {
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
+});

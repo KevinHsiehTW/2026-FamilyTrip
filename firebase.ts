@@ -2,41 +2,41 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth, GoogleAuthProvider } from "firebase/auth";
 
-// --- CONFIGURATION ---
-// TODO: Replace with your actual Firebase Project Config
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+// --- INITIALIZATION ---
 
-// Initialize Firebase
-let app;
+let app: any;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
-// Only initialize if the API key is present in environment variables.
-const isConfigured = !!firebaseConfig.apiKey;
+export const initializeFirebase = async () => {
+    // If already initialized, return existing instances
+    if (app) return { db, auth, googleProvider };
 
-if (isConfigured) {
     try {
+        // Fetch config from backend function
+        const response = await fetch('/.netlify/functions/get-config');
+        if (!response.ok) throw new Error('Failed to fetch config');
+
+        const config = await response.json();
+
         if (!getApps().length) {
-            app = initializeApp(firebaseConfig);
+            app = initializeApp(config);
         } else {
             app = getApp();
         }
+
         db = getFirestore(app);
         auth = getAuth(app);
         googleProvider = new GoogleAuthProvider();
+
+        console.log("Firebase initialized successfully via BFF");
+        return { db, auth, googleProvider };
     } catch (error) {
-        console.warn("Firebase initialization failed:", error);
+        console.warn("Firebase initialization failed (Network or Config error):", error);
+        // Return nulls so app can still render in "Offline/Demo" mode if needed
+        return { db: null, auth: null, googleProvider: null };
     }
-} else {
-    console.warn("Firebase config not set. Running in Demo/Mock mode.");
-}
+};
 
 export { db, auth, googleProvider };
