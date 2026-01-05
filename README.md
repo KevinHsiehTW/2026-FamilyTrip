@@ -5,12 +5,41 @@
 ## 🛠 技術堆疊 (Tech Stack)
 
 *   **核心框架**: React 19 (使用 Hooks: `useState`, `useEffect`, `useRef`)
-*   **樣式系統**: Tailwind CSS (利用 CDN 快速載入，無需編譯設定)
+*   **核心框架**: React 19 (使用 Hooks: `useState`, `useEffect`, `useRef`)
+*   **樣式系統**: Tailwind CSS (本地建置)
 *   **圖示庫**: Lucide React
 *   **後端服務**: Firebase v9 (Modular SDK)
     *   **Authentication**: Google 登入
     *   **Firestore**: 即時資料庫 (用於許願池同步)
-*   **模組載入**: ES Modules (透過 `esm.sh` 載入，無需 Node.js Build Step 即可運行)
+*   **建置工具**: Vite + TypeScript
+
+---
+
+## 💻 本地開發 (Development)
+
+1.  **安裝依賴套件**:
+    ```bash
+    npm install
+    ```
+
+2.  **啟動開發伺服器**:
+    ```bash
+    npm run dev
+    ```
+
+3.  **建置生產版本**:
+    ```bash
+    npm run build
+    ```
+
+## 🚀 自動部署 (Deployment)
+
+本專案已設定 GitHub Actions，當推送到 `main` 分支時會自動部署至 GitHub Pages。
+
+1.  確認 GitHub 儲存庫設定：
+    *   進入 Settings > Pages
+    *   Build and deployment source 選擇 **GitHub Actions**
+2.  推送程式碼後，Action 會自動執行並部署。
 
 ---
 
