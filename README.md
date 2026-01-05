@@ -1,4 +1,4 @@
-# 沖繩家族旅遊 2024 (Okinawa Family Trip App)
+# 沖繩家族旅遊 2026 (Okinawa Family Trip App)
 
 這是一個專為家族旅遊設計的 Mobile-First 單頁應用程式 (SPA)。它結合了行程管理、即時互動許願池、以及模擬 AI 導遊功能，旨在提供一個美觀且實用的旅遊輔助工具。
 
@@ -44,10 +44,25 @@
     *   Netlify 會自動讀取 `netlify.toml` 設定檔。
     *   **Build command**: `npm run build`
     *   **Publish directory**: `dist`
+    *   **Functions directory**: `netlify/functions` (自動偵測)
 
-3.  **部署**:
+3.  **環境變數設定 (Environment Variables)**:
+    在 Netlify 後台 Site Configuration > Environment Variables 中設定：
+    *   `FIREBASE_API_KEY` (無需 VITE_ 前綴)
+    *   ...其他 Firebase 變數
+    *   `ADMIN_EMAILS`
+
+4.  **部署**:
     *   點擊 "Deploy site" 即可。
-    *   後續只要推送到 GitHub，Netlify 就會自動重新部署。
+
+> [!IMPORTANT]
+> **架構變更 (BFF Pattern)**:
+> 為了極致的安全，本專案已改為 Backend-for-Frontend 架構。
+> *   **Firebase Config**: 前端不包含 Key，改為執行時向 `/.netlify/functions/get-config` 獲取。
+> *   **Admin 驗證**: 前端不包含 Email 列表，改為向 `/.netlify/functions/verify-admin` 驗證。
+> 
+> **本地開發注意**:
+> 請使用 `npm run dev` (已設定為 `netlify dev`) 來啟動，這樣才能同時模擬前端與後端 Functions。
 
 ---
 
@@ -105,6 +120,8 @@ VITE_ADMIN_EMAILS=kevin@example.com,wife@example.com
 3.  **Netlify 部署設定**:
     *   在 Netlify 後台，進入 **Site configuration** > **Environment variables**。
     *   新增上述變數 (如 `VITE_FIREBASE_API_KEY` 等) 與對應數值。
+
+
 
 ---
 

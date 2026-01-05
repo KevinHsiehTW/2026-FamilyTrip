@@ -1,14 +1,16 @@
 {
-    "name": "沖繩家族旅遊-2024",
+    "name": "okinawa-family-trip-2026",
     "private": true,
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "netlify dev",
+        "dev:internal": "vite",
         "build": "vite build",
         "preview": "vite preview"
     },
     "dependencies": {
+        "@netlify/functions": "^5.1.2",
         "firebase": "^12.7.0",
         "lucide-react": "^0.562.0",
         "react": "^19.2.3",
@@ -21,6 +23,7 @@
         "@vitejs/plugin-react": "^5.0.0",
         "autoprefixer": "^10.4.20",
         "globals": "^15.14.0",
+        "netlify-cli": "^23.13.0",
         "postcss": "^8.5.1",
         "tailwindcss": "^3.4.17",
         "typescript": "~5.8.2",

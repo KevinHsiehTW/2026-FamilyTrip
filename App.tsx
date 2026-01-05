@@ -71,11 +71,7 @@ interface ChatMessage {
 
 // --- CONFIGURATION ---
 
-// Admin emails are now loaded from environment variables (comma separated)
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || "")
-    .split(',')
-    .map(email => email.trim())
-    .filter(email => email.length > 0);
+
 
 // --- MOCK DATA ---
 
@@ -121,18 +117,15 @@ const ActivityIcon = ({ type }: { type: ItineraryItem['type'] }) => {
 const ItineraryView = ({
     itinerary,
     setItinerary,
-    user
+    isAdmin
 }: {
     itinerary: typeof MOCK_ITINERARY,
     setItinerary: React.Dispatch<React.SetStateAction<typeof MOCK_ITINERARY>>,
-    user: FirebaseUser | null
+    isAdmin: boolean
 }) => {
     const [day, setDay] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-
-    // Admin Check
-    const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
 
     const [newItem, setNewItem] = useState<{
         time: string;
@@ -211,8 +204,8 @@ const ItineraryView = ({
                         key={d}
                         onClick={() => setDay(d)}
                         className={`px-6 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${day === d
-                                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-cyan-200'
-                                : 'bg-white text-slate-500 hover:bg-slate-100'
+                            ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-cyan-200'
+                            : 'bg-white text-slate-500 hover:bg-slate-100'
                             }`}
                     >
                         第 {d} 天
@@ -234,8 +227,8 @@ const ItineraryView = ({
                             <div
                                 onClick={() => isAdmin && handleEditClick(item)}
                                 className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex gap-4 items-start transition-transform duration-200 relative ${isAdmin
-                                        ? 'cursor-pointer hover:bg-slate-50 active:scale-95'
-                                        : 'cursor-default'
+                                    ? 'cursor-pointer hover:bg-slate-50 active:scale-95'
+                                    : 'cursor-default'
                                     }`}
                             >
                                 <ActivityIcon type={item.type} />
@@ -320,8 +313,8 @@ const ItineraryView = ({
                                             type="button"
                                             onClick={() => setNewItem({ ...newItem, type: typeOption.id as any })}
                                             className={`flex-1 py-3 rounded-xl flex flex-col items-center justify-center transition-all ${newItem.type === typeOption.id
-                                                    ? `${typeOption.color} ring-2 ring-offset-1 ring-current font-bold`
-                                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                                                ? `${typeOption.color} ring-2 ring-offset-1 ring-current font-bold`
+                                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                                                 }`}
                                         >
                                             <typeOption.icon size={20} className="mb-1" />
@@ -567,8 +560,8 @@ const AssistantView = () => {
                             </div>
                         )}
                         <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === 'user'
-                                ? 'bg-blue-500 text-white rounded-tr-sm'
-                                : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                            ? 'bg-blue-500 text-white rounded-tr-sm'
+                            : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
                             }`}>
                             {msg.text}
                         </div>
@@ -738,7 +731,7 @@ export default function App() {
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden -mt-4 z-10">
                 <div className="absolute inset-0 pt-4">
-                    {activeTab === 'itinerary' && <ItineraryView itinerary={itineraryData} setItinerary={setItineraryData} user={user} />}
+                    {activeTab === 'itinerary' && <ItineraryView itinerary={itineraryData} setItinerary={setItineraryData} isAdmin={isAdmin} />}
                     {activeTab === 'wishlist' && <WishlistView />}
                     {activeTab === 'map' && <MapView />}
                     {activeTab === 'assistant' && <AssistantView />}
@@ -757,8 +750,8 @@ export default function App() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
                         className={`flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all duration-300 ${activeTab === tab.id
-                                ? 'bg-blue-50 text-blue-500 scale-105'
-                                : 'text-slate-400 hover:text-slate-600'
+                            ? 'bg-blue-50 text-blue-500 scale-105'
+                            : 'text-slate-400 hover:text-slate-600'
                             }`}
                     >
                         <tab.icon size={22} className={activeTab === tab.id ? "stroke-[2.5px]" : "stroke-2"} />
