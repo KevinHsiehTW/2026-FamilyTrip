@@ -34,7 +34,8 @@ import {
     updateDoc,
     doc,
     increment,
-    Timestamp
+    Timestamp,
+    setDoc
 } from 'firebase/firestore';
 import {
     onAuthStateChanged,
@@ -43,13 +44,14 @@ import {
     User as FirebaseUser
 } from 'firebase/auth';
 import { db, auth, googleProvider } from './firebase';
+import { importInitialData, DaySchedule } from './src/data/seed_itinerary';
 
 // --- TYPES ---
 
 type Tab = 'itinerary' | 'wishlist' | 'map' | 'assistant';
 
 interface ItineraryItem {
-    id: number;
+    id: string;
     time: string;
     title: string;
     type: 'food' | 'stay' | 'move' | 'play';
@@ -73,33 +75,7 @@ interface ChatMessage {
 
 
 
-// --- MOCK DATA ---
-
-const MOCK_ITINERARY: Record<number, ItineraryItem[]> = {
-    1: [
-        { id: 1, time: '10:00', title: '抵達那霸機場', type: 'move', description: '前往 OTS 租車公司取車。' },
-        { id: 2, time: '12:30', title: '午餐：豬肉蛋飯糰', type: 'food', description: '品嚐機場分店或附近的超人氣飯糰。' },
-        { id: 3, time: '14:30', title: '美國村 (American Village)', type: 'play', description: '美濱區逛街購物，感受濃濃美式風情。' },
-        { id: 4, time: '17:30', title: '日落海灘', type: 'play', description: '晚餐前在沙灘散步，欣賞美麗夕陽。' },
-        { id: 5, time: '19:00', title: '晚餐：牛排 House 88', type: 'food', description: '體驗經典的沖繩美式牛排。' },
-        { id: 6, time: '21:00', title: 'Vessel Hotel Campana', type: 'stay', description: '飯店 Check-in 休息，享受海景設施。' },
-    ],
-    2: [
-        { id: 7, time: '09:00', title: '開車前往北部', type: 'move', description: '沿著海岸線前往本部半島。' },
-        { id: 8, time: '10:30', title: '美麗海水族館', type: 'play', description: '觀賞著名的鯨鯊與黑潮之海。' },
-        { id: 9, time: '13:00', title: '午餐：岸本食堂', type: 'food', description: '品嚐百年老店的沖繩麵 (Okinawa Soba)。' },
-        { id: 10, time: '15:00', title: '古宇利大橋', type: 'play', description: '行駛在絕美翡翠綠海面上的跨海大橋。' },
-        { id: 11, time: '17:00', title: '名護鳳梨園', type: 'play', description: '搭乘鳳梨造型車，享用鳳梨點心。' },
-        { id: 12, time: '19:30', title: '晚餐：阿古豬涮涮鍋', type: 'food', description: '品嚐沖繩特產高級豬肉。' },
-    ],
-    3: [
-        { id: 13, time: '10:00', title: '首里城公園', type: 'play', description: '探訪琉球王國的歷史古蹟。' },
-        { id: 14, time: '12:30', title: '國際通', type: 'play', description: '最後採買伴手禮與品嚐街頭小吃。' },
-        { id: 15, time: '15:00', title: '瀨長島 Umikaji Terrace', type: 'food', description: '享用海景鬆餅，近距離看飛機起降。' },
-        { id: 16, time: '17:00', title: '還車', type: 'move', description: '將油加滿並歸還租車。' },
-        { id: 17, time: '19:00', title: '前往機場', type: 'move', description: '搭機返家，結束美好旅程。' },
-    ]
-};
+// --- MOCK DATA REMOVED ---
 
 // --- COMPONENTS ---
 
@@ -114,18 +90,39 @@ const ActivityIcon = ({ type }: { type: ItineraryItem['type'] }) => {
 };
 
 // 2. Views
-const ItineraryView = ({
-    itinerary,
-    setItinerary,
-    isAdmin
-}: {
-    itinerary: typeof MOCK_ITINERARY,
-    setItinerary: React.Dispatch<React.SetStateAction<typeof MOCK_ITINERARY>>,
-    isAdmin: boolean
-}) => {
+const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
     const [day, setDay] = useState(1);
+    const [itineraryData, setItineraryData] = useState<Record<number, ItineraryItem[]>>({});
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Fetch Itinerary from Firestore
+    useEffect(() => {
+        if (!db) {
+            setLoading(false);
+            return;
+        }
+
+        // Listen to all days
+        const q = query(collection(db, "itinerary"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data: Record<number, ItineraryItem[]> = {};
+            snapshot.forEach((doc) => {
+                const daySchedule = doc.data() as DaySchedule;
+                // Sort items by time
+                const sortedItems = (daySchedule.items || []).sort((a, b) => a.time.localeCompare(b.time));
+                data[daySchedule.day] = sortedItems;
+            });
+            setItineraryData(data);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching itinerary:", error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const [newItem, setNewItem] = useState<{
         time: string;
@@ -138,6 +135,18 @@ const ItineraryView = ({
         type: 'play',
         description: ''
     });
+
+    // Seed Data Handler
+    const handleImportData = async () => {
+        if (!isAdmin || !confirm("確定要匯入預設行程嗎？這將會覆寫目前的資料庫內容。")) return;
+        try {
+            await importInitialData();
+            alert("行程匯入成功！");
+        } catch (error) {
+            console.error("Import failed:", error);
+            alert("匯入失敗，請檢查權限或網路。");
+        }
+    };
 
     // Open modal for editing
     const handleEditClick = (item: ItineraryItem) => {
@@ -159,15 +168,16 @@ const ItineraryView = ({
         setIsModalOpen(true);
     };
 
-    const handleSaveItem = (e: React.FormEvent) => {
+    const handleSaveItem = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newItem.title.trim()) return;
+        if (!newItem.title.trim() || !db) return;
 
-        let updatedDayItems = [...itinerary[day]];
+        const currentItems = itineraryData[day] || [];
+        let updatedItems = [...currentItems];
 
         if (editingId) {
             // Edit existing
-            updatedDayItems = updatedDayItems.map(item =>
+            updatedItems = updatedItems.map(item =>
                 item.id === editingId
                     ? { ...item, ...newItem }
                     : item
@@ -175,35 +185,47 @@ const ItineraryView = ({
         } else {
             // Add new
             const item: ItineraryItem = {
-                id: Date.now(),
+                id: Date.now().toString(),
                 ...newItem
             };
-            updatedDayItems.push(item);
+            updatedItems.push(item);
         }
 
-        // Sort by time string
-        updatedDayItems.sort((a, b) => a.time.localeCompare(b.time));
+        // Sort
+        updatedItems.sort((a, b) => a.time.localeCompare(b.time));
 
-        setItinerary({
-            ...itinerary,
-            [day]: updatedDayItems
-        });
+        // Save to Firestore
+        try {
+            const docRef = doc(db, "itinerary", `day_${day}`);
+            // Check if doc exists (normally seeded data exists)
+            // But if starting fresh, we might need to set.
+            // Using setDoc with merge: true is safer for partial updates, 
+            // but here we are updating the entire array to keep order.
+            await setDoc(docRef, {
+                day: day,
+                date: `Day ${day}`, // Placeholder, seed data has better dates
+                items: updatedItems
+            }, { merge: true });
 
-        // Reset and close
-        setNewItem({ time: '12:00', title: '', type: 'play', description: '' });
-        setEditingId(null);
-        setIsModalOpen(false);
+            // Reset and close
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '' });
+            setEditingId(null);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error saving itinerary:", error);
+            alert("儲存失敗");
+        }
     };
 
     return (
         <div className="flex flex-col h-full pb-24 relative">
             {/* Day Toggles */}
-            <div className="flex justify-center gap-4 p-4 sticky top-0 bg-slate-50/95 backdrop-blur z-10">
-                {[1, 2, 3].map((d) => (
+            <div className="flex justify-center gap-4 p-4 sticky top-0 bg-slate-50/95 backdrop-blur z-10 overflow-x-auto no-scrollbar">
+                {[1, 2, 3, 4, 5, 6].map((d) => (
                     <button
                         key={d}
                         onClick={() => setDay(d)}
-                        className={`px-6 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${day === d
+                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm whitespace-nowrap ${day === d
                             ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-cyan-200'
                             : 'bg-white text-slate-500 hover:bg-slate-100'
                             }`}
@@ -215,34 +237,50 @@ const ItineraryView = ({
 
             {/* Timeline */}
             <div className="px-6 space-y-6 animate-fade-in overflow-y-auto pb-20">
-                {itinerary[day].map((item, idx) => (
-                    <div key={item.id} className="flex gap-4 group">
-                        <div className="flex flex-col items-center">
-                            <div className="text-xs font-semibold text-slate-400 mb-1 w-10 text-right">{item.time}</div>
-                            <div className="h-full w-0.5 bg-slate-200 group-last:bg-transparent relative">
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 ring-4 ring-slate-50"></div>
-                            </div>
-                        </div>
-                        <div className="flex-1 pb-6">
-                            <div
-                                onClick={() => isAdmin && handleEditClick(item)}
-                                className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex gap-4 items-start transition-transform duration-200 relative ${isAdmin
-                                    ? 'cursor-pointer hover:bg-slate-50 active:scale-95'
-                                    : 'cursor-default'
-                                    }`}
+                {loading ? (
+                    <div className="text-center text-slate-400 mt-10">讀取行程中...</div>
+                ) : (!itineraryData[day] || itineraryData[day].length === 0) ? (
+                    <div className="flex flex-col items-center justify-center mt-10 space-y-4">
+                        <div className="text-slate-400">尚無行程資料</div>
+                        {isAdmin && (
+                            <button
+                                onClick={handleImportData}
+                                className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-200"
                             >
-                                <ActivityIcon type={item.type} />
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-bold text-slate-800">{item.title}</h3>
-                                        {isAdmin && <Pencil size={14} className="text-slate-300 ml-2 mt-1 opacity-50" />}
+                                匯入預設行程 (Admin)
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    itineraryData[day].map((item, idx) => (
+                        <div key={item.id} className="flex gap-4 group">
+                            <div className="flex flex-col items-center">
+                                <div className="text-xs font-semibold text-slate-400 mb-1 w-10 text-right">{item.time}</div>
+                                <div className="h-full w-0.5 bg-slate-200 group-last:bg-transparent relative">
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 ring-4 ring-slate-50"></div>
+                                </div>
+                            </div>
+                            <div className="flex-1 pb-6">
+                                <div
+                                    onClick={() => isAdmin && handleEditClick(item)}
+                                    className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex gap-4 items-start transition-transform duration-200 relative ${isAdmin
+                                        ? 'cursor-pointer hover:bg-slate-50 active:scale-95'
+                                        : 'cursor-default'
+                                        }`}
+                                >
+                                    <ActivityIcon type={item.type} />
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-bold text-slate-800">{item.title}</h3>
+                                            {isAdmin && <Pencil size={14} className="text-slate-300 ml-2 mt-1 opacity-50" />}
+                                        </div>
+                                        <p className="text-sm text-slate-500 mt-1 leading-snug">{item.description}</p>
                                     </div>
-                                    <p className="text-sm text-slate-500 mt-1 leading-snug">{item.description}</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Floating Add Button - Only visible to Admins */}
@@ -633,7 +671,6 @@ export default function App() {
     const [user, setUser] = useState<FirebaseUser | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [appLoading, setAppLoading] = useState(true);
-    const [itineraryData, setItineraryData] = useState(MOCK_ITINERARY);
 
     // Auth State Listener
     useEffect(() => {
@@ -747,7 +784,7 @@ export default function App() {
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden -mt-4 z-10">
                 <div className="absolute inset-0 pt-4">
-                    {activeTab === 'itinerary' && <ItineraryView itinerary={itineraryData} setItinerary={setItineraryData} isAdmin={isAdmin} />}
+                    {activeTab === 'itinerary' && <ItineraryView isAdmin={isAdmin} />}
                     {activeTab === 'wishlist' && <WishlistView />}
                     {activeTab === 'map' && <MapView />}
                     {activeTab === 'assistant' && <AssistantView />}

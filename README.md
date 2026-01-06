@@ -46,7 +46,18 @@
     *   **Publish directory**: `dist`
     *   **Functions directory**: `netlify/functions` (自動偵測)
 
-3.  **環境變數設定 (Environment Variables)**:
+### 3. 頁面結構與路由 (Routing)
+本專案採用 **SPA (Single Page Application)** 架構，不使用傳統 URL 路由切換頁面，而是透過 React State (`activeTab`) 進行視圖切換，以提供最流暢的 App 操作體驗。
+
+| 視圖/路由 (View) | 對應組件 (Component) | 功能描述 | 權限控管 |
+| :--- | :--- | :--- | :--- |
+| **Login** | `<LoginView />` | 登入畫面 | 未登入時強制顯示 |
+| **Itinerary** | `<ItineraryView />` | 每日行程表、時間軸 | 全員可讀 / **管理員可寫** |
+| **Wishlist** | `<WishlistView />` | 景點許願池 (Firestore) | **登入者可讀寫** |
+| **Map** | `<MapView />` | 景點地圖 (Google Maps/Mock) | 全員可讀 |
+| **Assistant** | `<AssistantView />` | AI 智慧導遊對話視窗 | 全員可讀 |
+
+### 4. 環境變數設定 (Environment Variables)
     在 Netlify 後台 Site Configuration > Environment Variables 中設定：
     *   `FIREBASE_API_KEY` (無需 VITE_ 前綴)
     *   ...其他 Firebase 變數
