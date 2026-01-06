@@ -756,17 +756,10 @@ export default function App() {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             if (currentUser && currentUser.email) {
-                try {
-                    const res = await fetch('/.netlify/functions/verify-admin', {
-                        method: 'POST',
-                        body: JSON.stringify({ email: currentUser.email })
-                    });
-                    const data = await res.json();
-                    setIsAdmin(!!data.isAdmin);
-                } catch (e) {
-                    console.error("Admin verification failed", e);
-                    setIsAdmin(false);
-                }
+                const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
+                    .split(',')
+                    .map((e: string) => e.trim());
+                setIsAdmin(adminEmails.includes(currentUser.email));
             } else {
                 setIsAdmin(false);
             }

@@ -14,11 +14,19 @@ export const initializeFirebase = async () => {
     if (app) return { db, auth, googleProvider };
 
     try {
-        // Fetch config from backend function
-        const response = await fetch('/.netlify/functions/get-config');
-        if (!response.ok) throw new Error('Failed to fetch config');
+        const config = {
+            apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: import.meta.env.VITE_FIREBASE_APP_ID
+        };
 
-        const config = await response.json();
+        if (!config.apiKey) {
+            console.warn("Firebase config missing. Running in offline/demo mode.");
+            return { db: null, auth: null, googleProvider: null };
+        }
 
         if (!getApps().length) {
             app = initializeApp(config);
@@ -30,11 +38,10 @@ export const initializeFirebase = async () => {
         auth = getAuth(app);
         googleProvider = new GoogleAuthProvider();
 
-        console.log("Firebase initialized successfully via BFF");
+        console.log("Firebase initialized successfully");
         return { db, auth, googleProvider };
     } catch (error) {
-        console.warn("Firebase initialization failed (Network or Config error):", error);
-        // Return nulls so app can still render in "Offline/Demo" mode if needed
+        console.warn("Firebase initialization failed:", error);
         return { db: null, auth: null, googleProvider: null };
     }
 };
