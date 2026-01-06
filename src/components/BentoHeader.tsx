@@ -13,7 +13,8 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
 
     useEffect(() => {
         const calculateTimeLeft = () => {
-            const tripDate = new Date('2026-07-01T00:00:00'); // Example date
+            const tripDateStr = import.meta.env.VITE_TRIP_START_DATE || '2026-07-01T00:00:00';
+            const tripDate = new Date(tripDateStr);
             const now = new Date();
             const difference = tripDate.getTime() - now.getTime();
 
