@@ -23,12 +23,12 @@ const INITIAL_DATA: DaySchedule[] = [
         day: 1,
         date: "2026-02-03 (二)",
         items: [
-            { id: "d1-1", time: "08:15", title: "高雄起飛 (SL 0390)", type: "move", description: "前往那霸機場，預計 10:50 抵達。手提 7kg / 託運 20kg。", timezone: 'Asia/Taipei' },
-            { id: "d1-2", time: "11:30", title: "辦理入境 & 接駁", type: "move", description: "預約 ecbo cloak 或行李運送服務。" },
-            { id: "d1-3", time: "12:30", title: "午餐：豬肉蛋飯糰", type: "food", description: "牧志市場店 (Pork Tamago Onigiri)。經典沖繩美食。" },
-            { id: "d1-4", time: "14:00", title: "國際通漫遊", type: "play", description: "那霸市區逛街，單軌沿線景點。" },
-            { id: "d1-5", time: "15:00", title: "入住：As Bld", type: "stay", description: "住宿 Check-in (那霸市區)。" },
-            { id: "d1-6", time: "18:00", title: "晚餐：燒肉大餐", type: "food", description: "慶祝第一晚！(找有非牛/非海鮮選項的店)" },
+            { id: "d1-1", time: "08:15", title: "高雄起飛 (SL 0390)", type: "move", description: "前往那霸機場，預計 10:50 抵達。手提 7kg / 託運 20kg。", timezone: 'Asia/Taipei', location: "https://www.google.com/maps/place/Kaohsiung+International+Airport/@22.5762046,120.3475704,15z" },
+            { id: "d1-2", time: "11:30", title: "辦理入境 & 接駁", type: "move", description: "預約 ecbo cloak 或行李運送服務。", location: "https://www.google.com/maps/place/Naha+Airport/@26.2064567,127.6439226,17z" },
+            { id: "d1-3", time: "12:30", title: "午餐：豬肉蛋飯糰", type: "food", description: "牧志市場店 (Pork Tamago Onigiri)。經典沖繩美食。", location: "https://www.google.com/maps/place/Pork+Tamago+Onigiri+-+Makishi+Market/@26.2146914,127.686522,17z" },
+            { id: "d1-4", time: "14:00", title: "國際通漫遊", type: "play", description: "那霸市區逛街，單軌沿線景點。", location: "https://www.google.com/maps/place/Kokusai-dori/@26.216347,127.687285,17z" },
+            { id: "d1-5", time: "15:00", title: "入住：As Bld", type: "stay", description: "住宿 Check-in (那霸市區)。", location: "https://www.google.com/maps/place/Naha/@26.2123,127.6789,17z" },
+            { id: "d1-6", time: "18:00", title: "晚餐：燒肉大餐", type: "food", description: "慶祝第一晚！(找有非牛/非海鮮選項的店)", location: "https://www.google.com/maps/place/Yakiniku/@26.2185,127.6890,17z" },
         ]
     },
     {
