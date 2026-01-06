@@ -40,7 +40,9 @@ import { importInitialData, DaySchedule } from './src/data/seed_itinerary';
 import { ItineraryItem, WishlistItem, ChatMessage, Tab } from './src/types';
 import { OkinawaMap } from './src/components/OkinawaMap';
 import { BentoHeader } from './src/components/BentoHeader';
+
 import { WishlistCard } from './src/components/WishlistCard';
+import { ChatInterface } from './src/components/ChatInterface';
 
 // --- CONFIGURATION ---
 
@@ -615,86 +617,7 @@ const MapView = ({ items }: { items: ItineraryItem[] }) => (
     </div>
 );
 
-const AssistantView = () => {
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: '1', text: "嗨！我是你的沖繩 AI 導遊。有任何關於行程的問題都可以問我喔！", sender: 'ai', timestamp: Date.now() }
-    ]);
-    const [input, setInput] = useState('');
-    const scrollRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages]);
-
-    const handleSend = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-
-        const userMsg: ChatMessage = { id: Date.now().toString(), text: input, sender: 'user', timestamp: Date.now() };
-        setMessages(prev => [...prev, userMsg]);
-        setInput('');
-
-        // Simulate AI thinking and reply
-        setTimeout(() => {
-            let replyText = "這聽起來很棒！沖繩真的有很多好玩的地方。";
-            const lowerInput = userMsg.text.toLowerCase();
-
-            if (lowerInput.includes('天氣') || lowerInput.includes('weather')) replyText = "那霸目前氣溫 28°C，天氣晴朗。記得多補充水分跟防曬喔！";
-            else if (lowerInput.includes('吃') || lowerInput.includes('美食') || lowerInput.includes('food')) replyText = "來到沖繩一定要吃阿古豬、苦瓜炒蛋、塔可飯，還有必吃的飯糰！";
-            else if (lowerInput.includes('海') || lowerInput.includes('玩') || lowerInput.includes('beach')) replyText = "翡翠海灘、日落海灘和古宇利海灘都非常推薦喔！";
-            else if (lowerInput.includes('買') || lowerInput.includes('伴手禮') || lowerInput.includes('souvenir')) replyText = "紅芋塔、金楚糕、雪鹽餅乾都是必買的伴手禮。";
-
-            const aiMsg: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                text: replyText,
-                sender: 'ai',
-                timestamp: Date.now()
-            };
-            setMessages(prev => [...prev, aiMsg]);
-        }, 1500);
-    };
-
-    return (
-        <div className="flex flex-col h-full pt-4 pb-24">
-            <div className="flex-1 overflow-y-auto px-4 space-y-4" ref={scrollRef}>
-                {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {msg.sender === 'ai' && (
-                            <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center mr-2 mt-1 shrink-0">
-                                <Bot size={16} className="text-cyan-600" />
-                            </div>
-                        )}
-                        <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === 'user'
-                            ? 'bg-blue-500 text-white rounded-tr-sm'
-                            : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
-                            }`}>
-                            {msg.text}
-                        </div>
-                    </div>
-                ))}
-            </div>
-            <form onSubmit={handleSend} className="p-4 bg-slate-50 border-t border-slate-100">
-                <div className="relative">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="輸入問題..."
-                        className="w-full pl-4 pr-12 py-3 rounded-full border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-cyan-400 outline-none shadow-sm"
-                    />
-                    <button
-                        type="submit"
-                        className="absolute right-2 top-1.5 p-1.5 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-colors"
-                    >
-                        <Send size={18} />
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
-};
 
 // --- LOGIN SCREEN ---
 
@@ -887,7 +810,7 @@ export default function App() {
                     )}
                     {activeTab === 'wishlist' && <WishlistView user={user} />}
                     {activeTab === 'map' && <MapView items={itineraryData[day] || []} />}
-                    {activeTab === 'assistant' && <AssistantView />}
+                    {activeTab === 'assistant' && <ChatInterface itineraryData={itineraryData} />}
                 </div>
             </main>
 
