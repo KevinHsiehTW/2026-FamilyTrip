@@ -158,6 +158,7 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
 
             <PackingListModal
                 isOpen={isPackingOpen}
+                userId={user?.uid}
                 onClose={() => setIsPackingOpen(false)}
                 onUpdateProgress={setPackingProgress}
             />

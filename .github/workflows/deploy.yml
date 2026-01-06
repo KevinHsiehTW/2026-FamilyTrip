@@ -43,6 +43,7 @@ jobs:
           VITE_ADMIN_EMAILS: ${{ secrets.VITE_ADMIN_EMAILS }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           VITE_TRIP_START_DATE: ${{ secrets.VITE_TRIP_START_DATE }}
+          VITE_WEATHER_API_KEY: ${{ secrets.VITE_WEATHER_API_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
