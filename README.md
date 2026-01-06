@@ -5,7 +5,6 @@
 ## 🛠 技術堆疊 (Tech Stack)
 
 *   **核心框架**: React 19 (使用 Hooks: `useState`, `useEffect`, `useRef`)
-*   **核心框架**: React 19 (使用 Hooks: `useState`, `useEffect`, `useRef`)
 *   **樣式系統**: Tailwind CSS (本地建置)
 *   **圖示庫**: Lucide React
 *   **後端服務**: Firebase v9 (Modular SDK)
@@ -15,65 +14,23 @@
 
 ---
 
-## 💻 本地開發 (Development)
+## 📂 專案結構與路由 (Architecture & Routing)
 
-1.  **安裝依賴套件**:
-    ```bash
-    npm install
-    ```
-
-2.  **啟動開發伺服器**:
-    ```bash
-    npm run dev
-    ```
-
-3.  **建置生產版本**:
-    ```bash
-    npm run build
-    ```
-
-## 🚀 自動部署 (Deployment)
-
-本專案建議使用 **Netlify** 進行部署。
-
-1.  **新增網站**:
-    *   登入 Netlify 並選擇 "Add new site" > "Import an existing project"。
-    *   連結您的 GitHub 儲存庫。
-
-2.  **確認設定**:
-    *   Netlify 會自動讀取 `netlify.toml` 設定檔。
-    *   **Build command**: `npm run build`
-    *   **Publish directory**: `dist`
-    *   **Functions directory**: `netlify/functions` (自動偵測)
-
-### 3. 頁面結構與路由 (Routing)
 本專案採用 **SPA (Single Page Application)** 架構，不使用傳統 URL 路由切換頁面，而是透過 React State (`activeTab`) 進行視圖切換，以提供最流暢的 App 操作體驗。
 
-| 視圖/路由 (View) | 對應組件 (Component) | 功能描述 | 權限控管 |
-| :--- | :--- | :--- | :--- |
-| **Login** | `<LoginView />` | 登入畫面 | 未登入時強制顯示 |
-| **Itinerary** | `<ItineraryView />` | 每日行程表、時間軸 | 全員可讀 / **管理員可寫** |
-| **Wishlist** | `<WishlistView />` | 景點許願池 (Firestore) | **登入者可讀寫** |
-| **Map** | `<MapView />` | 景點地圖 (Google Maps/Mock) | 全員可讀 |
-| **Assistant** | `<AssistantView />` | AI 智慧導遊對話視窗 | 全員可讀 |
-
-### 4. 環境變數設定 (Environment Variables)
-    在 Netlify 後台 Site Configuration > Environment Variables 中設定：
-    *   `FIREBASE_API_KEY` (無需 VITE_ 前綴)
-    *   ...其他 Firebase 變數
-    *   `ADMIN_EMAILS`
-
-4.  **部署**:
-    *   點擊 "Deploy site" 即可。
+| 視圖/路由 (View) | 對應組件 (Component) | 功能描述                    | 權限控管                  |
+| :--------------- | :------------------- | :-------------------------- | :------------------------ |
+| **Login**        | `<LoginView />`      | 登入畫面                    | 未登入時強制顯示          |
+| **Itinerary**    | `<ItineraryView />`  | 每日行程表、時間軸          | 全員可讀 / **管理員可寫** |
+| **Wishlist**     | `<WishlistView />`   | 景點許願池 (Firestore)      | **登入者可讀寫**          |
+| **Map**          | `<MapView />`        | 景點地圖 (Google Maps/Mock) | 全員可讀                  |
+| **Assistant**    | `<AssistantView />`  | AI 智慧導遊對話視窗         | 全員可讀                  |
 
 > [!IMPORTANT]
 > **架構變更 (BFF Pattern)**:
 > 為了極致的安全，本專案已改為 Backend-for-Frontend 架構。
 > *   **Firebase Config**: 前端不包含 Key，改為執行時向 `/.netlify/functions/get-config` 獲取。
 > *   **Admin 驗證**: 前端不包含 Email 列表，改為向 `/.netlify/functions/verify-admin` 驗證。
-> 
-> **本地開發注意**:
-> 請使用 `npm run dev` (已設定為 `netlify dev`) 來啟動，這樣才能同時模擬前端與後端 Functions。
 
 ---
 
@@ -121,8 +78,52 @@ service cloud.firestore {
 *   **模擬對話**: 內建關鍵字偵測 (天氣、美食、海邊、伴手禮)，模擬 AI 回覆。
 *   **打字機效果**: 模擬 AI 思考延遲 (setTimeout)，提升真實感。
 
-### 5. 地圖 (Map)
+### 6. 地圖 (Map)
 *   **UI 佔位符**: 目前為靜態展示介面，包含模擬的「目前位置」浮動卡片與背景動畫。
+
+---
+
+## 💻 本地開發 (Development)
+
+> [!NOTE]
+> 請使用 `npm run dev` (已設定為 `netlify dev`) 來啟動，這樣才能同時模擬前端與後端 Functions。
+
+1.  **安裝依賴套件**:
+    ```bash
+    npm install
+    ```
+
+2.  **啟動開發伺服器**:
+    ```bash
+    npm run dev
+    ```
+
+3.  **建置生產版本**:
+    ```bash
+    npm run build
+    ```
+
+---
+
+## 🚀 自動部署 (Deployment)
+
+本專案建議使用 **Netlify** 進行部署。
+
+1.  **新增網站**:
+    *   登入 Netlify 並選擇 "Add new site" > "Import an existing project"。
+    *   連結您的 GitHub 儲存庫。
+
+2.  **確認設定**:
+    *   Netlify 會自動讀取 `netlify.toml` 設定檔。
+    *   **Build command**: `npm run build`
+    *   **Publish directory**: `dist`
+    *   **Functions directory**: `netlify/functions` (自動偵測)
+
+3.  **環境變數**:
+    *   請參考下方「重要設定與注意事項」區塊，在 Netlify 設定所有必要的環境變數。
+
+4.  **部署**:
+    *   點擊 "Deploy site" 即可。
 
 ---
 
@@ -150,9 +151,8 @@ VITE_ADMIN_EMAILS=kevin@example.com,wife@example.com
 2.  **填入數值**: 在 `.env` 中填入您的 Firebase 設定。
 3.  **Netlify 部署設定**:
     *   在 Netlify 後台，進入 **Site configuration** > **Environment variables**。
-    *   新增上述變數 (如 `VITE_FIREBASE_API_KEY` 等) 與對應數值。
-
-
+    *   新增上述變數 (如 `VITE_FIREBASE_API_KEY`, `FIREBASE_API_KEY` 等) 與對應數值。
+    *   注意：因為採用 BFF 架構，部分 Key 可能需要無 `VITE_` 前綴的版本供 Functions 使用，具體請參考 `netlify.toml` 或 Functions 程式碼。
 
 ---
 

@@ -23,7 +23,9 @@ import {
     AlignLeft,
     Check,
     Save,
-    Pencil
+    Pencil,
+    MapPin,
+    Trash2
 } from 'lucide-react';
 import {
     collection,
@@ -56,6 +58,7 @@ interface ItineraryItem {
     title: string;
     type: 'food' | 'stay' | 'move' | 'play';
     description: string;
+    location?: string;
 }
 
 interface WishlistItem {
@@ -129,11 +132,13 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
         title: string;
         type: ItineraryItem['type'];
         description: string;
+        location: string;
     }>({
         time: '12:00',
         title: '',
         type: 'play',
-        description: ''
+        description: '',
+        location: ''
     });
 
     // Seed Data Handler
@@ -156,7 +161,8 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
             time: item.time,
             title: item.title,
             type: item.type,
-            description: item.description
+            description: item.description,
+            location: item.location || ''
         });
         setIsModalOpen(true);
     };
@@ -164,7 +170,7 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
     // Open modal for creating
     const handleCreateClick = () => {
         setEditingId(null);
-        setNewItem({ time: '12:00', title: '', type: 'play', description: '' });
+        setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
         setIsModalOpen(true);
     };
 
@@ -194,6 +200,8 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
         // Sort
         updatedItems.sort((a, b) => a.time.localeCompare(b.time));
 
+        console.log("Saving itinerary..."); // Force HMR update
+
         // Save to Firestore
         try {
             const docRef = doc(db, "itinerary", `day_${day}`);
@@ -208,7 +216,7 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
             }, { merge: true });
 
             // Reset and close
-            setNewItem({ time: '12:00', title: '', type: 'play', description: '' });
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
             setEditingId(null);
             setIsModalOpen(false);
         } catch (error) {
@@ -217,15 +225,38 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
         }
     };
 
+    const handleDeleteItem = async () => {
+        if (!editingId || !db || !confirm("確定要刪除這個行程嗎？此動作無法復原。")) return;
+
+        const currentItems = itineraryData[day] || [];
+        const updatedItems = currentItems.filter(item => item.id !== editingId);
+
+        try {
+            const docRef = doc(db, "itinerary", `day_${day}`);
+            await setDoc(docRef, {
+                day: day,
+                date: `Day ${day}`,
+                items: updatedItems
+            }, { merge: true });
+
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
+            setEditingId(null);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error deleting itinerary:", error);
+            alert("刪除失敗");
+        }
+    };
+
     return (
         <div className="flex flex-col h-full pb-24 relative">
             {/* Day Toggles */}
-            <div className="flex justify-center gap-4 p-4 sticky top-0 bg-slate-50/95 backdrop-blur z-10 overflow-x-auto no-scrollbar">
+            <div className="flex justify-start gap-4 p-4 sticky top-0 bg-slate-50/95 backdrop-blur z-10 overflow-x-auto no-scrollbar">
                 {[1, 2, 3, 4, 5, 6].map((d) => (
                     <button
                         key={d}
                         onClick={() => setDay(d)}
-                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm whitespace-nowrap ${day === d
+                        className={`flex-shrink-0 px-4 h-9 flex items-center justify-center rounded-full text-sm font-bold shadow-sm whitespace-nowrap ${day === d
                             ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-cyan-200'
                             : 'bg-white text-slate-500 hover:bg-slate-100'
                             }`}
@@ -242,6 +273,7 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
                 ) : (!itineraryData[day] || itineraryData[day].length === 0) ? (
                     <div className="flex flex-col items-center justify-center mt-10 space-y-4">
                         <div className="text-slate-400">尚無行程資料</div>
+                        {/* Exposed for debugging/setup */}
                         {isAdmin && (
                             <button
                                 onClick={handleImportData}
@@ -272,7 +304,20 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-bold text-slate-800">{item.title}</h3>
-                                            {isAdmin && <Pencil size={14} className="text-slate-300 ml-2 mt-1 opacity-50" />}
+                                            <div className="flex gap-2">
+                                                {item.location && (
+                                                    <a
+                                                        href={item.location}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="text-blue-500 hover:text-blue-600 p-1.5 bg-blue-50 rounded-full"
+                                                    >
+                                                        <MapPin size={16} />
+                                                    </a>
+                                                )}
+                                                {isAdmin && <Pencil size={14} className="text-slate-300 mt-1 opacity-50" />}
+                                            </div>
                                         </div>
                                         <p className="text-sm text-slate-500 mt-1 leading-snug">{item.description}</p>
                                     </div>
@@ -334,6 +379,20 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
                                 />
                             </div>
 
+                            {/* Location Input */}
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <MapPin size={14} /> 地點連結 (Google Maps)
+                                </label>
+                                <input
+                                    type="url"
+                                    placeholder="https://goo.gl/maps/..."
+                                    value={newItem.location}
+                                    onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 text-sm"
+                                />
+                            </div>
+
                             {/* Type Selection */}
                             <div>
                                 <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -376,13 +435,24 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
                                 />
                             </div>
 
-                            <button
-                                type="submit"
-                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-200 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"
-                            >
-                                {editingId ? <Save size={20} /> : <Check size={20} />}
-                                {editingId ? '儲存變更' : '確認新增'}
-                            </button>
+                            <div className="flex gap-3 mt-2">
+                                {editingId && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteItem}
+                                        className="bg-red-50 text-red-500 p-4 rounded-xl shadow-sm hover:bg-red-100 active:scale-95 transition-all"
+                                    >
+                                        <Trash2 size={20} />
+                                    </button>
+                                )}
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {editingId ? <Save size={20} /> : <Check size={20} />}
+                                    {editingId ? '儲存變更' : '確認新增'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
