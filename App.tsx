@@ -428,7 +428,7 @@ const WishlistView = () => {
     };
 
     return (
-        <div className="px-6 pt-4 pb-24 h-full flex flex-col">
+        <div className="px-6 pt-4 pb-36 h-full flex flex-col">
             <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-6 rounded-2xl shadow-lg shadow-pink-200 text-white mb-6">
                 <h2 className="text-xl font-bold mb-1">家族許願池</h2>
                 <p className="text-pink-100 text-sm opacity-90">投票決定我們下一個想去的地方！</p>
@@ -463,7 +463,7 @@ const WishlistView = () => {
                     value={newWish}
                     onChange={(e) => setNewWish(e.target.value)}
                     placeholder="你想去哪裡？"
-                    className="flex-1 px-4 py-3 rounded-xl border-none shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-400 outline-none text-slate-700"
+                    className="flex-1 px-4 py-3 rounded-xl border-none shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-400 outline-none text-slate-700 bg-white"
                 />
                 <button
                     type="submit"
