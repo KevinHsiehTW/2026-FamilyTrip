@@ -43,6 +43,7 @@
 | `VITE_ADMIN_EMAILS`                 | 管理員 Email (逗號分隔) | `admin@gmail.com,mom@gmail.com` |
 | `VITE_GEMINI_API_KEY`               | AI API Key (預留功能)   | `AIzaSy...`                     |
 | `VITE_TRIP_START_DATE`              | 出發日期                | `2026-07-01T00:00:00+09:00`     |
+| `VITE_WEATHER_API_KEY`              | OpenWeatherMap API Key  | `你的_API_KEY`                  |
 
 ### 步驟 2: 開啟 GitHub Pages 權限
 

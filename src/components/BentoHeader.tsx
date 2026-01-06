@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CloudSun, JapaneseYen, LogOut, User, Plane, CalendarClock } from 'lucide-react';
+import { CloudSun, JapaneseYen, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind } from 'lucide-react';
 
 interface Props {
     user: FirebaseUser | null;
@@ -10,6 +10,34 @@ interface Props {
 
 export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number }>({ days: 0, hours: 0 });
+    const [weather, setWeather] = useState<{ temp: number, desc: string, icon: string } | null>(null);
+
+    // Weather Fetching
+    useEffect(() => {
+        const fetchWeather = async () => {
+            const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
+            if (!apiKey) return;
+
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Naha,JP&units=metric&lang=zh_tw&appid=${apiKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setWeather({
+                        temp: Math.round(data.main.temp),
+                        desc: data.weather[0].description,
+                        icon: data.weather[0].icon
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch weather", error);
+            }
+        };
+
+        fetchWeather();
+        // Refresh every 30 mins
+        const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const calculateTimeLeft = () => {
@@ -70,14 +98,27 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
                 </div>
 
                 {/* Weather Card */}
-                <div className="bento-card p-3 flex flex-col justify-between h-28 bg-gradient-to-br from-amber-100 to-orange-50 border-orange-100">
-                    <div className="flex justify-between items-start">
+                <div className="bento-card p-3 flex flex-col justify-between h-28 bg-gradient-to-br from-amber-100 to-orange-50 border-orange-100 relative overflow-hidden">
+                    <div className="flex justify-between items-start z-10">
                         <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">那霸市</span>
-                        <CloudSun className="text-orange-400" size={20} />
+                        {weather ? (
+                            <img
+                                src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                                className="w-8 h-8 -mt-1 -mr-1"
+                                alt={weather.desc}
+                            />
+                        ) : (
+                            <CloudSun className="text-orange-400" size={20} />
+                        )}
                     </div>
-                    <div>
-                        <div className="text-3xl font-black text-slate-800">28°<span className="text-lg text-slate-400 font-medium">C</span></div>
-                        <div className="text-xs text-slate-500 mt-1">晴朗多雲</div>
+                    <div className="z-10">
+                        <div className="text-3xl font-black text-slate-800">
+                            {weather ? weather.temp : '--'}
+                            <span className="text-lg text-slate-400 font-medium">°C</span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">
+                            {weather ? weather.desc : '尚無資料 (需 API Key)'}
+                        </div>
                     </div>
                 </div>
 
