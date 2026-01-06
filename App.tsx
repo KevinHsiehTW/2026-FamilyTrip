@@ -96,12 +96,14 @@ const ItineraryView = ({
         type: ItineraryItem['type'];
         description: string;
         location: string;
+        timezone: 'Asia/Taipei' | 'Asia/Tokyo';
     }>({
         time: '12:00',
         title: '',
         type: 'play',
         description: '',
-        location: ''
+        location: '',
+        timezone: 'Asia/Tokyo'
     });
 
     // Seed Data Handler
@@ -124,8 +126,10 @@ const ItineraryView = ({
             time: item.time,
             title: item.title,
             type: item.type,
+
             description: item.description,
-            location: item.location || ''
+            location: item.location || '',
+            timezone: item.timezone || 'Asia/Tokyo'
         });
         setIsModalOpen(true);
     };
@@ -133,7 +137,7 @@ const ItineraryView = ({
     // Open modal for creating
     const handleCreateClick = () => {
         setEditingId(null);
-        setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
+        setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
         setIsModalOpen(true);
     };
 
@@ -179,7 +183,9 @@ const ItineraryView = ({
             }, { merge: true });
 
             // Reset and close
-            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
+            // Reset and close
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
+            setEditingId(null);
             setEditingId(null);
             setIsModalOpen(false);
         } catch (error) {
@@ -202,7 +208,7 @@ const ItineraryView = ({
                 items: updatedItems
             }, { merge: true });
 
-            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '' });
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
             setEditingId(null);
             setIsModalOpen(false);
         } catch (error) {
@@ -250,7 +256,15 @@ const ItineraryView = ({
                     itineraryData[day].map((item, idx) => (
                         <div key={item.id} className="flex gap-4 group">
                             <div className="flex flex-col items-center">
-                                <div className="text-xs font-semibold text-slate-400 mb-1 w-10 text-right">{item.time}</div>
+                                <div className="text-xs font-semibold text-slate-400 mb-1 w-10 text-right flex flex-col items-end">
+                                    <span>{item.time}</span>
+                                    {item.timezone === 'Asia/Taipei' && (
+                                        <span className="text-[10px] bg-red-100 text-red-600 px-1 rounded transform scale-90 origin-right">TW</span>
+                                    )}
+                                    {item.timezone === 'Asia/Tokyo' && item.type === 'move' && item.title.includes('起飛') && (
+                                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded transform scale-90 origin-right">JP</span>
+                                    )}
+                                </div>
                                 <div className="h-full w-0.5 bg-slate-200 group-last:bg-transparent relative">
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 ring-4 ring-slate-50"></div>
                                 </div>
@@ -314,18 +328,41 @@ const ItineraryView = ({
                             </div>
 
                             <form onSubmit={handleSaveItem} className="p-6 space-y-4">
-                                {/* Time Input */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                        <Clock size={14} /> 時間
-                                    </label>
-                                    <input
-                                        type="time"
-                                        required
-                                        value={newItem.time}
-                                        onChange={(e) => setNewItem({ ...newItem, time: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none"
-                                    />
+                                {/* Time & Timezone Input */}
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                            <Clock size={14} /> 時間
+                                        </label>
+                                        <input
+                                            type="time"
+                                            required
+                                            value={newItem.time}
+                                            onChange={(e) => setNewItem({ ...newItem, time: e.target.value })}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none"
+                                        />
+                                    </div>
+                                    <div className="w-1/3">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                            時區
+                                        </label>
+                                        <div className="flex bg-slate-100 rounded-xl p-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewItem({ ...newItem, timezone: 'Asia/Tokyo' })}
+                                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${newItem.timezone !== 'Asia/Taipei' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}
+                                            >
+                                                🇯🇵 JP
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewItem({ ...newItem, timezone: 'Asia/Taipei' })}
+                                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${newItem.timezone === 'Asia/Taipei' ? 'bg-white shadow text-red-600' : 'text-slate-400'}`}
+                                            >
+                                                🇹🇼 TW
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Title Input */}

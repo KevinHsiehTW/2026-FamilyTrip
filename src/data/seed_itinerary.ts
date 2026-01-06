@@ -9,6 +9,7 @@ export interface ItineraryItem {
     description: string;
     location?: string;
     cost?: string;
+    timezone?: 'Asia/Taipei' | 'Asia/Tokyo';
 }
 
 export interface DaySchedule {
@@ -22,7 +23,7 @@ const INITIAL_DATA: DaySchedule[] = [
         day: 1,
         date: "2026-02-03 (二)",
         items: [
-            { id: "d1-1", time: "08:15", title: "高雄起飛 (SL 0390)", type: "move", description: "前往那霸機場，預計 10:50 抵達。手提 7kg / 託運 20kg。" },
+            { id: "d1-1", time: "08:15", title: "高雄起飛 (SL 0390)", type: "move", description: "前往那霸機場，預計 10:50 抵達。手提 7kg / 託運 20kg。", timezone: 'Asia/Taipei' },
             { id: "d1-2", time: "11:30", title: "辦理入境 & 接駁", type: "move", description: "預約 ecbo cloak 或行李運送服務。" },
             { id: "d1-3", time: "12:30", title: "午餐：豬肉蛋飯糰", type: "food", description: "牧志市場店 (Pork Tamago Onigiri)。經典沖繩美食。" },
             { id: "d1-4", time: "14:00", title: "國際通漫遊", type: "play", description: "那霸市區逛街，單軌沿線景點。" },
@@ -81,7 +82,7 @@ const INITIAL_DATA: DaySchedule[] = [
             { id: "d6-2", time: "09:00", title: "波上宮", type: "play", description: "海邊神社，祈求平安。" },
             { id: "d6-3", time: "11:00", title: "最後補貨", type: "play", description: "琉貿百貨 (配眼鏡?) 或國際通。" },
             { id: "d6-4", time: "15:30", title: "前往機場", type: "move", description: "預約接送或搭單軌。" },
-            { id: "d6-5", time: "17:30", title: "那霸起飛 (CI 133)", type: "move", description: "20:25 抵達高雄。手提 7kg / 託運 23kg (2件)。" },
+            { id: "d6-5", time: "17:30", title: "那霸起飛 (CI 133)", type: "move", description: "20:25 抵達高雄。手提 7kg / 託運 23kg (2件)。", timezone: 'Asia/Tokyo' },
         ]
     }
 ];

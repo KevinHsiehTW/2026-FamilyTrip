@@ -7,6 +7,7 @@ export interface ItineraryItem {
     location?: string;
     lat?: number;
     lng?: number;
+    timezone?: 'Asia/Taipei' | 'Asia/Tokyo';
 }
 
 export interface WishlistItem {
