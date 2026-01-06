@@ -50,6 +50,7 @@ import { db, auth, googleProvider } from './firebase';
 import { importInitialData, DaySchedule } from './src/data/seed_itinerary';
 import { ItineraryItem, WishlistItem, ChatMessage, Tab } from './src/types';
 import { OkinawaMap } from './src/components/OkinawaMap';
+import { BentoHeader } from './src/components/BentoHeader';
 
 // --- CONFIGURATION ---
 
@@ -810,13 +811,13 @@ export default function App() {
     );
 
     return (
-        <div className="h-screen w-full bg-slate-50 font-sans text-slate-800 flex flex-col overflow-hidden max-w-md mx-auto shadow-2xl relative">
+        <div className="h-screen w-full font-sans text-slate-800 flex flex-col overflow-hidden max-w-md mx-auto shadow-2xl relative bg-transparent">
 
-            {/* Header is always visible */}
-            {renderHeader()}
+            {/* Bento Grid Header */}
+            <BentoHeader user={user} onLogin={handleGoogleLogin} onLogout={handleLogout} />
 
             {/* Main Content Area */}
-            <main className="flex-1 relative overflow-hidden -mt-4 z-10 flex flex-col">
+            <main className="flex-1 relative overflow-hidden mt-2 z-10 flex flex-col rounded-t-3xl bg-slate-50 shadow-inner">
                 <div className="flex-1 overflow-hidden relative z-0">
                     {activeTab === 'itinerary' && <ItineraryView isAdmin={isAdmin} day={day} setDay={setDay} itineraryData={itineraryData} loading={dataLoading} />}
                     {activeTab === 'wishlist' && <WishlistView />}
@@ -825,8 +826,8 @@ export default function App() {
                 </div>
             </main>
 
-            {/* Bottom Tab Bar */}
-            <div className="absolute bottom-6 left-4 right-4 bg-white/90 backdrop-blur-lg border border-white/40 p-2 rounded-2xl shadow-lg shadow-slate-200/50 flex justify-around items-center z-30">
+            {/* Bottom Dock Navigation */}
+            <div className="absolute bottom-6 left-6 right-6 h-20 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] shadow-2xl shadow-slate-300/50 flex justify-between items-center px-6 z-30">
                 {[
                     { id: 'itinerary', icon: Calendar, label: '行程' },
                     { id: 'wishlist', icon: Heart, label: '許願' },
@@ -836,13 +837,13 @@ export default function App() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all duration-300 ${activeTab === tab.id
-                            ? 'bg-blue-50 text-blue-500 scale-105'
-                            : 'text-slate-400 hover:text-slate-600'
+                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 active:scale-90 ${activeTab === tab.id
+                            ? 'bg-gradient-to-tr from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-200 -translate-y-4'
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                             }`}
                     >
-                        <tab.icon size={22} className={activeTab === tab.id ? "stroke-[2.5px]" : "stroke-2"} />
-                        <span className="text-[10px] font-medium mt-1">{tab.label}</span>
+                        <tab.icon size={24} className={activeTab === tab.id ? "stroke-[2.5px]" : "stroke-2"} />
+                        {activeTab !== tab.id && <span className="text-[9px] font-bold mt-1 opacity-60">{tab.label}</span>}
                     </button>
                 ))}
             </div>

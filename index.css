@@ -3,21 +3,62 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  background-color: #242424;
+  color-scheme: light;
+  background-color: #f0f2f5; 
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Bento Variables */
+  --bento-bg: #ffffff;
+  --bento-border: rgba(255, 255, 255, 0.6);
+  --bento-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(139, 190, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(199, 142, 236, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(134, 239, 172, 0.1) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  .bento-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-sm rounded-3xl transition-transform duration-200 active:scale-[0.98];
+  }
+  
+  .bento-icon-btn {
+    @apply flex items-center justify-center rounded-2xl transition-all duration-200 active:scale-95 hover:shadow-md;
+  }
+}
+
+/* Hide Scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
