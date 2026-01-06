@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CloudSun, JapaneseYen, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind } from 'lucide-react';
+import { CloudSun, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind, Backpack } from 'lucide-react';
+import { PackingListModal } from './PackingListModal';
 
 interface Props {
     user: FirebaseUser | null;
@@ -11,6 +12,8 @@ interface Props {
 export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number }>({ days: 0, hours: 0 });
     const [weather, setWeather] = useState<{ temp: number, desc: string, icon: string } | null>(null);
+    const [isPackingOpen, setIsPackingOpen] = useState(false);
+    const [packingProgress, setPackingProgress] = useState(0);
 
     // Weather Fetching
     useEffect(() => {
@@ -122,18 +125,42 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
                     </div>
                 </div>
 
-                {/* Rate Card */}
-                <div className="bento-card p-3 flex flex-col justify-between h-28 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100">
+                {/* Packing List Card */}
+                <div
+                    onClick={() => setIsPackingOpen(true)}
+                    className="bento-card p-3 flex flex-col justify-between h-28 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100 cursor-pointer hover:shadow-md group"
+                >
                     <div className="flex justify-between items-start">
-                        <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider">日圓匯率</span>
-                        <JapaneseYen className="text-emerald-500" size={20} />
+                        <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider">行李準備</span>
+                        <Backpack className="text-indigo-500 group-hover:scale-110 transition-transform" size={20} />
                     </div>
-                    <div>
-                        <div className="text-3xl font-black text-slate-800">0.214</div>
-                        <div className="text-xs text-emerald-600 font-medium mt-1">▼ 0.15%</div>
+
+                    <div className="flex items-end gap-2">
+                        <div className="text-3xl font-black text-slate-800">{packingProgress}<span className="text-lg text-slate-400 font-medium">%</span></div>
+
+                        {/* Simple Circular Progress Visual */}
+                        <div className="w-8 h-8 relative mb-1">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                                <path
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke="#6366f1"
+                                    strokeWidth="4"
+                                    strokeDasharray={`${packingProgress}, 100`}
+                                />
+                            </svg>
+                        </div>
                     </div>
+                    <div className="text-xs text-indigo-400 font-medium">點擊檢查清單</div>
                 </div>
             </div>
+
+            <PackingListModal
+                isOpen={isPackingOpen}
+                onClose={() => setIsPackingOpen(false)}
+                onUpdateProgress={setPackingProgress}
+            />
         </header>
     );
 };
