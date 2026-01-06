@@ -212,14 +212,14 @@ const ItineraryView = ({
     };
 
     return (
-        <div className="flex flex-col h-full pb-24 relative">
-            {/* Day Toggles */}
-            <div className="flex justify-start gap-4 p-4 sticky top-0 bg-slate-50/95 backdrop-blur z-10 overflow-x-auto no-scrollbar">
+        <div className="flex flex-col h-full relative overflow-hidden">
+            {/* Day Toggles - Fixed at top, horizontal scroll only */}
+            <div className="flex-shrink-0 flex justify-start gap-4 p-4 bg-slate-50/95 backdrop-blur z-10 overflow-x-auto no-scrollbar border-b border-slate-100/50">
                 {[1, 2, 3, 4, 5, 6].map((d) => (
                     <button
                         key={d}
                         onClick={() => setDay(d)}
-                        className={`flex-shrink-0 px-4 h-9 flex items-center justify-center rounded-full text-sm font-bold shadow-sm whitespace-nowrap ${day === d
+                        className={`flex-shrink-0 px-4 h-9 flex items-center justify-center rounded-full text-sm font-bold shadow-sm whitespace-nowrap transition-all active:scale-95 ${day === d
                             ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-cyan-200'
                             : 'bg-white text-slate-500 hover:bg-slate-100'
                             }`}
@@ -229,8 +229,8 @@ const ItineraryView = ({
                 ))}
             </div>
 
-            {/* Timeline */}
-            <div className="px-6 space-y-6 animate-fade-in overflow-y-auto pb-20">
+            {/* Timeline - vertically scrollable */}
+            <div className="flex-1 px-6 space-y-6 animate-fade-in overflow-y-auto pb-32 pt-4">
                 {loading ? (
                     <div className="text-center text-slate-400 mt-10">讀取行程中...</div>
                 ) : (!itineraryData[day] || itineraryData[day].length === 0) ? (
