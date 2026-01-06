@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Map,
     Calendar,
@@ -338,124 +339,127 @@ const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
                 </button>
             )}
 
-            {/* Add/Edit Item Modal */}
-            {isModalOpen && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-slide-up">
-                        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 flex justify-between items-center text-white">
-                            <h3 className="font-bold text-lg">{editingId ? '編輯行程' : `新增第 ${day} 天行程`}</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSaveItem} className="p-6 space-y-4">
-                            {/* Time Input */}
-                            <div>
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    <Clock size={14} /> 時間
-                                </label>
-                                <input
-                                    type="time"
-                                    required
-                                    value={newItem.time}
-                                    onChange={(e) => setNewItem({ ...newItem, time: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none"
-                                />
-                            </div>
-
-                            {/* Title Input */}
-                            <div>
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    <TypeIcon size={14} /> 標題
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="例如：參觀水族館"
-                                    value={newItem.title}
-                                    onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300"
-                                />
-                            </div>
-
-                            {/* Location Input */}
-                            <div>
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    <MapPin size={14} /> 地點連結 (Google Maps)
-                                </label>
-                                <input
-                                    type="url"
-                                    placeholder="https://goo.gl/maps/..."
-                                    value={newItem.location}
-                                    onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 text-sm"
-                                />
-                            </div>
-
-                            {/* Type Selection */}
-                            <div>
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    活動類型
-                                </label>
-                                <div className="flex gap-2">
-                                    {[
-                                        { id: 'food', icon: Coffee, label: '吃', color: 'bg-orange-100 text-orange-500' },
-                                        { id: 'stay', icon: BedDouble, label: '住', color: 'bg-indigo-100 text-indigo-500' },
-                                        { id: 'move', icon: Car, label: '行', color: 'bg-blue-100 text-blue-500' },
-                                        { id: 'play', icon: Camera, label: '玩', color: 'bg-pink-100 text-pink-500' },
-                                    ].map((typeOption) => (
-                                        <button
-                                            key={typeOption.id}
-                                            type="button"
-                                            onClick={() => setNewItem({ ...newItem, type: typeOption.id as any })}
-                                            className={`flex-1 py-3 rounded-xl flex flex-col items-center justify-center transition-all ${newItem.type === typeOption.id
-                                                ? `${typeOption.color} ring-2 ring-offset-1 ring-current font-bold`
-                                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                                                }`}
-                                        >
-                                            <typeOption.icon size={20} className="mb-1" />
-                                            <span className="text-xs">{typeOption.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Description Input */}
-                            <div>
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                    <AlignLeft size={14} /> 備註 / 說明
-                                </label>
-                                <textarea
-                                    rows={3}
-                                    placeholder="詳細內容..."
-                                    value={newItem.description}
-                                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 resize-none"
-                                />
-                            </div>
-
-                            <div className="flex gap-3 mt-2">
-                                {editingId && (
-                                    <button
-                                        type="button"
-                                        onClick={handleDeleteItem}
-                                        className="bg-red-50 text-red-500 p-4 rounded-xl shadow-sm hover:bg-red-100 active:scale-95 transition-all"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
-                                )}
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                >
-                                    {editingId ? <Save size={20} /> : <Check size={20} />}
-                                    {editingId ? '儲存變更' : '確認新增'}
+            {/* Add/Edit Item Modal - Top Aligned Style - Portaled */}
+            {isModalOpen && createPortal(
+                <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/40 backdrop-blur-sm animate-fade-in no-scrollbar">
+                    <div className="flex min-h-full items-start justify-center p-4 pt-20">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative animate-slide-up flex flex-col mb-10">
+                            <div className="sticky top-0 z-10 bg-gradient-to-r from-cyan-500 to-blue-500 p-4 flex justify-between items-center text-white rounded-t-3xl shadow-md">
+                                <h3 className="font-bold text-lg">{editingId ? '編輯行程' : `新增第 ${day} 天行程`}</h3>
+                                <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                                    <X size={20} />
                                 </button>
                             </div>
-                        </form>
+
+                            <form onSubmit={handleSaveItem} className="p-6 space-y-4">
+                                {/* Time Input */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        <Clock size={14} /> 時間
+                                    </label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={newItem.time}
+                                        onChange={(e) => setNewItem({ ...newItem, time: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none"
+                                    />
+                                </div>
+
+                                {/* Title Input */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        <TypeIcon size={14} /> 標題
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="例如：參觀水族館"
+                                        value={newItem.title}
+                                        onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300"
+                                    />
+                                </div>
+
+                                {/* Location Input */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        <MapPin size={14} /> 地點連結 (Google Maps)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        placeholder="https://goo.gl/maps/..."
+                                        value={newItem.location}
+                                        onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 text-sm"
+                                    />
+                                </div>
+
+                                {/* Type Selection */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        活動類型
+                                    </label>
+                                    <div className="flex gap-2">
+                                        {[
+                                            { id: 'food', icon: Coffee, label: '吃', color: 'bg-orange-100 text-orange-500' },
+                                            { id: 'stay', icon: BedDouble, label: '住', color: 'bg-indigo-100 text-indigo-500' },
+                                            { id: 'move', icon: Car, label: '行', color: 'bg-blue-100 text-blue-500' },
+                                            { id: 'play', icon: Camera, label: '玩', color: 'bg-pink-100 text-pink-500' },
+                                        ].map((typeOption) => (
+                                            <button
+                                                key={typeOption.id}
+                                                type="button"
+                                                onClick={() => setNewItem({ ...newItem, type: typeOption.id as any })}
+                                                className={`flex-1 py-3 rounded-xl flex flex-col items-center justify-center transition-all ${newItem.type === typeOption.id
+                                                    ? `${typeOption.color} ring-2 ring-offset-1 ring-current font-bold`
+                                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                                                    }`}
+                                            >
+                                                <typeOption.icon size={20} className="mb-1" />
+                                                <span className="text-xs">{typeOption.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Description Input */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        <AlignLeft size={14} /> 備註 / 說明
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        placeholder="詳細內容..."
+                                        value={newItem.description}
+                                        onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 mt-2">
+                                    {editingId && (
+                                        <button
+                                            type="button"
+                                            onClick={handleDeleteItem}
+                                            className="bg-red-50 text-red-500 p-4 rounded-xl shadow-sm hover:bg-red-100 active:scale-95 transition-all"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {editingId ? <Save size={20} /> : <Check size={20} />}
+                                        {editingId ? '儲存變更' : '確認新增'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
