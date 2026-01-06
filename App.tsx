@@ -48,32 +48,8 @@ import {
 } from 'firebase/auth';
 import { db, auth, googleProvider } from './firebase';
 import { importInitialData, DaySchedule } from './src/data/seed_itinerary';
-
-// --- TYPES ---
-
-type Tab = 'itinerary' | 'wishlist' | 'map' | 'assistant';
-
-interface ItineraryItem {
-    id: string;
-    time: string;
-    title: string;
-    type: 'food' | 'stay' | 'move' | 'play';
-    description: string;
-    location?: string;
-}
-
-interface WishlistItem {
-    id: string;
-    name: string;
-    votes: number;
-}
-
-interface ChatMessage {
-    id: string;
-    text: string;
-    sender: 'user' | 'ai';
-    timestamp: number;
-}
+import { ItineraryItem, WishlistItem, ChatMessage, Tab } from './src/types';
+import { OkinawaMap } from './src/components/OkinawaMap';
 
 // --- CONFIGURATION ---
 
@@ -94,39 +70,24 @@ const ActivityIcon = ({ type }: { type: ItineraryItem['type'] }) => {
 };
 
 // 2. Views
-const ItineraryView = ({ isAdmin }: { isAdmin: boolean }) => {
-    const [day, setDay] = useState(1);
-    const [itineraryData, setItineraryData] = useState<Record<number, ItineraryItem[]>>({});
-    const [loading, setLoading] = useState(true);
+const ItineraryView = ({
+    isAdmin,
+    day,
+    setDay,
+    itineraryData,
+    loading
+}: {
+    isAdmin: boolean;
+    day: number;
+    setDay: (d: number) => void;
+    itineraryData: Record<number, ItineraryItem[]>;
+    loading: boolean;
+}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    // Fetch Itinerary from Firestore
-    useEffect(() => {
-        if (!db) {
-            setLoading(false);
-            return;
-        }
+    // State lifted to App component
 
-        // Listen to all days
-        const q = query(collection(db, "itinerary"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data: Record<number, ItineraryItem[]> = {};
-            snapshot.forEach((doc) => {
-                const daySchedule = doc.data() as DaySchedule;
-                // Sort items by time
-                const sortedItems = (daySchedule.items || []).sort((a, b) => a.time.localeCompare(b.time));
-                data[daySchedule.day] = sortedItems;
-            });
-            setItineraryData(data);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching itinerary:", error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
 
     const [newItem, setNewItem] = useState<{
         time: string;
@@ -588,34 +549,10 @@ const WishlistView = () => {
     );
 };
 
-const MapView = () => (
+const MapView = ({ items }: { items: ItineraryItem[] }) => (
     <div className="h-full flex flex-col pt-4 px-4 pb-24">
-        <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 h-full relative overflow-hidden">
-            <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-slate-400">
-                <Map size={48} className="mb-4 text-cyan-400 opacity-50" />
-                <p className="font-medium">地圖功能區塊</p>
-                <p className="text-xs mt-2 text-center max-w-[200px]">
-                    (此處可整合 Google Maps API 或 Leaflet)
-                </p>
-
-                {/* Decorative Fake Map Elements */}
-                <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-red-400 rounded-full shadow-lg ring-4 ring-white animate-bounce"></div>
-                <div className="absolute bottom-1/3 right-1/3 w-3 h-3 bg-blue-400 rounded-full shadow-lg ring-4 ring-white"></div>
-                <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-green-400 rounded-full shadow-lg ring-4 ring-white"></div>
-            </div>
-
-            {/* Floating Card on Map */}
-            <div className="absolute bottom-6 left-4 right-4 bg-white/90 backdrop-blur p-4 rounded-xl shadow-lg">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center text-cyan-600">
-                        <Car size={20} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-slate-800">目前位置</h4>
-                        <p className="text-xs text-slate-500">正在前往美麗海水族館 (預計 45 分鐘)</p>
-                    </div>
-                </div>
-            </div>
+        <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 h-full relative overflow-hidden z-0">
+            <OkinawaMap items={items} />
         </div>
     </div>
 );
@@ -746,6 +683,36 @@ export default function App() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [appLoading, setAppLoading] = useState(true);
 
+    // Lifted State
+    const [day, setDay] = useState(1);
+    const [itineraryData, setItineraryData] = useState<Record<number, ItineraryItem[]>>({});
+    const [dataLoading, setDataLoading] = useState(true);
+
+    // Fetch Itinerary from Firestore (Lifted)
+    useEffect(() => {
+        if (!db) {
+            setDataLoading(false);
+            return;
+        }
+
+        const q = query(collection(db, "itinerary"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data: Record<number, ItineraryItem[]> = {};
+            snapshot.forEach((doc) => {
+                const daySchedule = doc.data() as DaySchedule;
+                const sortedItems = (daySchedule.items || []).sort((a, b) => a.time.localeCompare(b.time));
+                data[daySchedule.day] = sortedItems;
+            });
+            setItineraryData(data);
+            setDataLoading(false);
+        }, (error) => {
+            console.error("Error fetching itinerary:", error);
+            setDataLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     // Auth State Listener
     useEffect(() => {
         if (!auth) {
@@ -849,11 +816,11 @@ export default function App() {
             {renderHeader()}
 
             {/* Main Content Area */}
-            <main className="flex-1 relative overflow-hidden -mt-4 z-10">
-                <div className="absolute inset-0 pt-4">
-                    {activeTab === 'itinerary' && <ItineraryView isAdmin={isAdmin} />}
+            <main className="flex-1 relative overflow-hidden -mt-4 z-10 flex flex-col">
+                <div className="flex-1 overflow-hidden relative z-0">
+                    {activeTab === 'itinerary' && <ItineraryView isAdmin={isAdmin} day={day} setDay={setDay} itineraryData={itineraryData} loading={dataLoading} />}
                     {activeTab === 'wishlist' && <WishlistView />}
-                    {activeTab === 'map' && <MapView />}
+                    {activeTab === 'map' && <MapView items={itineraryData[day] || []} />}
                     {activeTab === 'assistant' && <AssistantView />}
                 </div>
             </main>
