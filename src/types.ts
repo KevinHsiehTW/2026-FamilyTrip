@@ -14,6 +14,8 @@ export interface WishlistItem {
     id: string;
     name: string;
     votes: number;
+    createdBy?: string;
+    votedBy?: string[];
 }
 
 export interface ChatMessage {

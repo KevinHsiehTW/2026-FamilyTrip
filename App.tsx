@@ -28,18 +28,7 @@ import {
     MapPin,
     Trash2
 } from 'lucide-react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    doc,
-    increment,
-    Timestamp,
-    setDoc
-} from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, query, orderBy, onSnapshot, Timestamp, increment, arrayUnion, arrayRemove, setDoc } from "firebase/firestore";
 import {
     onAuthStateChanged,
     signInWithPopup,
@@ -51,6 +40,7 @@ import { importInitialData, DaySchedule } from './src/data/seed_itinerary';
 import { ItineraryItem, WishlistItem, ChatMessage, Tab } from './src/types';
 import { OkinawaMap } from './src/components/OkinawaMap';
 import { BentoHeader } from './src/components/BentoHeader';
+import { WishlistCard } from './src/components/WishlistCard';
 
 // --- CONFIGURATION ---
 
@@ -464,7 +454,7 @@ const ItineraryView = ({
     );
 };
 
-const WishlistView = () => {
+const WishlistView = ({ user }: { user: FirebaseUser | null }) => {
     const [wishes, setWishes] = useState<WishlistItem[]>([]);
     const [newWish, setNewWish] = useState('');
     const [loading, setLoading] = useState(true);
@@ -506,7 +496,13 @@ const WishlistView = () => {
 
         if (!db) {
             // Mock add
-            const newItem = { id: Date.now().toString(), name: newWish, votes: 1 };
+            const newItem: WishlistItem = {
+                id: Date.now().toString(),
+                name: newWish,
+                votes: 1,
+                createdBy: user?.uid,
+                votedBy: user ? [user.uid] : []
+            };
             setWishes(prev => [...prev, newItem].sort((a, b) => b.votes - a.votes));
             setNewWish('');
             return;
@@ -516,7 +512,9 @@ const WishlistView = () => {
             await addDoc(collection(db, "wishlist"), {
                 name: newWish,
                 votes: 1,
-                createdAt: Timestamp.now()
+                createdAt: Timestamp.now(),
+                createdBy: user?.uid,
+                votedBy: user ? [user.uid] : []
             });
             setNewWish('');
         } catch (err) {
@@ -525,17 +523,42 @@ const WishlistView = () => {
         }
     };
 
-    const handleVote = async (id: string, currentVotes: number) => {
-        if (!db) {
-            // Mock vote
-            setWishes(prev => prev.map(w => w.id === id ? { ...w, votes: w.votes + 1 } : w).sort((a, b) => b.votes - a.votes));
+    const handleVote = async (item: WishlistItem) => {
+        if (!db || !user) {
+            // Mock vote or alert if no user
+            if (!user) { alert("請先登入才能投票！"); return; }
+            setWishes(prev => prev.map(w => w.id === item.id ? { ...w, votes: w.votes + 1 } : w).sort((a, b) => b.votes - a.votes));
             return;
         }
 
-        const wishRef = doc(db, "wishlist", id);
-        await updateDoc(wishRef, {
-            votes: increment(1)
-        });
+        const wishRef = doc(db, "wishlist", item.id);
+        const hasVoted = item.votedBy?.includes(user.uid);
+
+        if (hasVoted) {
+            // Cancel vote
+            await updateDoc(wishRef, {
+                votes: increment(-1),
+                votedBy: arrayRemove(user.uid)
+            });
+        } else {
+            // Add vote
+            await updateDoc(wishRef, {
+                votes: increment(1),
+                votedBy: arrayUnion(user.uid)
+            });
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        // No confirm() needed here, UI handles double check
+        if (!db) return;
+
+        try {
+            await deleteDoc(doc(db, "wishlist", id));
+        } catch (err) {
+            console.error("Error deleting:", err);
+            alert("刪除失敗 (您可能不是發布者)");
+        }
     };
 
     return (
@@ -554,16 +577,13 @@ const WishlistView = () => {
                     <div className="text-center text-slate-400 mt-10">目前沒有願望，快來新增一個！</div>
                 ) : (
                     wishes.map((item) => (
-                        <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group">
-                            <span className="font-medium text-slate-700">{item.name}</span>
-                            <button
-                                onClick={() => handleVote(item.id, item.votes)}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-500 rounded-full hover:bg-rose-100 transition-colors active:scale-95"
-                            >
-                                <Heart size={16} className="fill-rose-500" />
-                                <span className="font-bold text-sm">{item.votes}</span>
-                            </button>
-                        </div>
+                        <WishlistCard
+                            key={item.id}
+                            item={item}
+                            user={user}
+                            onVote={handleVote}
+                            onDelete={handleDelete}
+                        />
                     ))
                 )}
             </div>
@@ -856,8 +876,16 @@ export default function App() {
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden mt-2 z-10 flex flex-col rounded-t-3xl bg-slate-50 shadow-inner">
                 <div className="flex-1 overflow-hidden relative z-0">
-                    {activeTab === 'itinerary' && <ItineraryView isAdmin={isAdmin} day={day} setDay={setDay} itineraryData={itineraryData} loading={dataLoading} />}
-                    {activeTab === 'wishlist' && <WishlistView />}
+                    {activeTab === 'itinerary' && (
+                        <ItineraryView
+                            day={day}
+                            setDay={setDay}
+                            itineraryData={itineraryData}
+                            loading={dataLoading}
+                            isAdmin={isAdmin}
+                        />
+                    )}
+                    {activeTab === 'wishlist' && <WishlistView user={user} />}
                     {activeTab === 'map' && <MapView items={itineraryData[day] || []} />}
                     {activeTab === 'assistant' && <AssistantView />}
                 </div>
