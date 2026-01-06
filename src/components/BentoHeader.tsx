@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CloudSun, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind, Backpack } from 'lucide-react';
+import { CloudSun, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind, Backpack, LogOut, ChevronDown } from 'lucide-react';
 import { PackingListModal } from './PackingListModal';
 
 interface Props {
@@ -13,7 +13,23 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number }>({ days: 0, hours: 0 });
     const [weather, setWeather] = useState<{ temp: number, desc: string, icon: string } | null>(null);
     const [isPackingOpen, setIsPackingOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [packingProgress, setPackingProgress] = useState(0);
+    const menuRef = React.useRef<HTMLDivElement>(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Weather Fetching
     useEffect(() => {
@@ -70,14 +86,46 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
                     <h1 className="text-2xl font-black text-slate-800 tracking-tight">Okinawa 2026</h1>
                     <p className="text-xs text-slate-500 font-medium">Family Trip Planning</p>
                 </div>
-                <div
-                    onClick={user ? onLogout : onLogin}
-                    className="w-10 h-10 bento-icon-btn bg-white border border-slate-200 shadow-sm text-slate-600 cursor-pointer hover:bg-slate-50"
-                >
-                    {user?.photoURL ? (
-                        <img src={user.photoURL} alt="User" className="w-full h-full rounded-2xl object-cover" />
-                    ) : (
-                        <User size={20} />
+                <div className="relative" ref={menuRef}>
+                    <div
+                        onClick={() => user ? setIsMenuOpen(!isMenuOpen) : onLogin()}
+                        className={`
+                            h-10 px-2 flex items-center gap-2 rounded-full border shadow-sm cursor-pointer transition-all duration-200
+                            ${user 
+                                ? 'bg-white border-slate-200 hover:border-blue-300 pr-3' 
+                                : 'w-10 justify-center bg-white border-slate-200 hover:bg-slate-50'
+                            }
+                        `}
+                    >
+                        {user?.photoURL ? (
+                            <>
+                                <img src={user.photoURL} alt="User" className="w-6 h-6 rounded-full object-cover" />
+                                <ChevronDown size={14} className={`text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                            </>
+                        ) : (
+                            <User size={20} className="text-slate-600" />
+                        )}
+                    </div>
+
+                    {/* Dropdown Menu */}
+                    {user && isMenuOpen && (
+                        <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animation-fade-in origin-top-right">
+                            <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                                <p className="text-xs text-slate-400 font-medium">Signed in as</p>
+                                <p className="text-sm font-bold text-slate-700 truncate">{user.displayName || 'Traveler'}</p>
+                            </div>
+                            
+                            <button
+                                onClick={() => {
+                                    onLogout();
+                                    setIsMenuOpen(false);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                            >
+                                <LogOut size={16} />
+                                <span>登出</span>
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
