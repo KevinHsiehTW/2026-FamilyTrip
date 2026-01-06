@@ -81,12 +81,32 @@
     *   一般使用者：僅能瀏覽行程。
     *   **管理員**：可點擊現有行程進行「編輯」，或使用懸浮按鈕「新增」行程。
 
-### 3. 許願池 (Wishlist)
+### 3. Firebase 設定 (Firestore Rules)
+為了讓許願池功能正常運作，請前往 Firebase Console > Firestore Database > Rules，貼上以下規則：
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 輔助函式
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 許願池：只有登入者可讀寫
+    match /wishlist/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
+```
+
+### 4. 許願池 (Wishlist)
 *   **即時同步**: 使用 Firestore `onSnapshot` 監聽，家族成員新增願望或投票時，所有人的畫面會即時更新。
 *   **投票機制**: 點擊愛心即可投票，列表會自動依照票數高低排序。
 *   **無縫體驗**: 透過 Optimistic UI 或快速反饋，讓操作感覺不到延遲。
 
-### 4. AI 導遊 (Assistant)
+### 5. AI 導遊 (Assistant)
 *   **模擬對話**: 內建關鍵字偵測 (天氣、美食、海邊、伴手禮)，模擬 AI 回覆。
 *   **打字機效果**: 模擬 AI 思考延遲 (setTimeout)，提升真實感。
 

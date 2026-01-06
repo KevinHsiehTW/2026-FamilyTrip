@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 輔助函式：檢查是否已登入
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 1. 許願池 (Wishlist)
+    // 規則：只有「已登入」的使用者可以查看、新增或投票
+    match /wishlist/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    // 2. 行程資料 (Itinerary) - 如果未來行程也存入資料庫
+    // 規則：允許所有人查看，只有登入者可操作
+    match /itinerary/{document=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // 3. 預設阻擋其他未定義的路徑 (安全)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
