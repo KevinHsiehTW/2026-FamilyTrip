@@ -45,6 +45,7 @@ import { BentoHeader } from './src/components/BentoHeader';
 
 import { WishlistCard } from './src/components/WishlistCard';
 import { ChatInterface } from './src/components/ChatInterface';
+import { ItineraryDetailModal } from './src/components/ItineraryDetailModal';
 
 // --- CONFIGURATION ---
 
@@ -80,16 +81,13 @@ const ItineraryView = ({
 }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
 
     // State lifted to App component
 
 
     const [newItem, setNewItem] = useState<{
         time: string;
-        title: string;
-        type: ItineraryItem['type'];
-        description: string;
-        location: string;
         title: string;
         type: ItineraryItem['type'];
         description: string;
@@ -101,7 +99,6 @@ const ItineraryView = ({
         title: '',
         type: 'play',
         description: '',
-        location: '',
         location: '',
         timezone: 'Asia/Tokyo',
         relatedLinks: []
@@ -273,11 +270,14 @@ const ItineraryView = ({
                             </div>
                             <div className="flex-1 pb-6">
                                 <div
-                                    onClick={() => isAdmin && handleEditClick(item)}
-                                    className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex gap-4 items-start transition-transform duration-200 relative ${isAdmin
-                                        ? 'cursor-pointer hover:bg-slate-50 active:scale-95'
-                                        : 'cursor-default'
-                                        }`}
+                                    onClick={() => {
+                                        if (isAdmin) {
+                                            handleEditClick(item);
+                                        } else {
+                                            setSelectedItem(item);
+                                        }
+                                    }}
+                                    className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex gap-4 items-start transition-transform duration-200 relative cursor-pointer hover:bg-slate-50 active:scale-95`}
                                 >
                                     <ActivityIcon type={item.type} />
                                     <div className="flex-1">
@@ -532,6 +532,13 @@ const ItineraryView = ({
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {selectedItem && (
+                <ItineraryDetailModal
+                    item={selectedItem}
+                    onClose={() => setSelectedItem(null)}
+                />
             )}
         </div>
     );
@@ -875,7 +882,7 @@ export default function App() {
         <div className="h-screen w-full font-sans text-slate-800 flex flex-col overflow-hidden max-w-md mx-auto shadow-2xl relative bg-transparent">
 
             {/* Bento Grid Header */}
-            <BentoHeader user={user} onLogin={handleGoogleLogin} onLogout={handleLogout} />
+            <BentoHeader user={user} onLogin={handleGoogleLogin} onLogout={handleLogout} isAdmin={isAdmin} />
 
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden mt-2 z-10 flex flex-col rounded-t-3xl bg-slate-50 shadow-inner">

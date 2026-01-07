@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CloudSun, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind, Backpack, LogOut, ChevronDown } from 'lucide-react';
+import { CloudSun, User, Plane, CalendarClock, Cloud, Sun, CloudRain, Wind, Backpack, LogOut, ChevronDown, UserCog, ShieldCheck } from 'lucide-react';
 import { PackingListModal } from './PackingListModal';
+import { UserProfileModal } from './UserProfileModal';
 
 interface Props {
     user: FirebaseUser | null;
     onLogin: () => void;
     onLogout: () => void;
+    isAdmin?: boolean;
 }
 
-export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
+export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout, isAdmin }) => {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number }>({ days: 0, hours: 0 });
     const [weather, setWeather] = useState<{ temp: number, desc: string, icon: string } | null>(null);
     const [isPackingOpen, setIsPackingOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [packingProgress, setPackingProgress] = useState(0);
     const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -91,8 +94,8 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
                         onClick={() => user ? setIsMenuOpen(!isMenuOpen) : onLogin()}
                         className={`
                             h-10 px-2 flex items-center gap-2 rounded-full border shadow-sm cursor-pointer transition-all duration-200
-                            ${user 
-                                ? 'bg-white border-slate-200 hover:border-blue-300 pr-3' 
+                            ${user
+                                ? 'bg-white border-slate-200 hover:border-blue-300 pr-3'
                                 : 'w-10 justify-center bg-white border-slate-200 hover:bg-slate-50'
                             }
                         `}
@@ -109,18 +112,37 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
 
                     {/* Dropdown Menu */}
                     {user && isMenuOpen && (
-                        <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animation-fade-in origin-top-right">
-                            <div className="px-4 py-2 border-b border-slate-50 mb-1">
-                                <p className="text-xs text-slate-400 font-medium">Signed in as</p>
+                        <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animation-fade-in origin-top-right">
+                            <div className="px-4 py-3 border-b border-slate-50 mb-1">
+                                <p className="text-xs text-slate-400 font-medium mb-0.5">Signed in as</p>
                                 <p className="text-sm font-bold text-slate-700 truncate">{user.displayName || 'Traveler'}</p>
+                                {isAdmin && (
+                                    <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider">
+                                        <ShieldCheck size={10} />
+                                        Admin Access
+                                    </div>
+                                )}
                             </div>
-                            
+
+                            <button
+                                onClick={() => {
+                                    setIsProfileOpen(true);
+                                    setIsMenuOpen(false);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                            >
+                                <UserCog size={16} className="text-slate-400" />
+                                <span>個人檔案</span>
+                            </button>
+
+                            <div className="h-px bg-slate-50 my-1 mx-2"></div>
+
                             <button
                                 onClick={() => {
                                     onLogout();
                                     setIsMenuOpen(false);
                                 }}
-                                className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
                             >
                                 <LogOut size={16} />
                                 <span>登出</span>
@@ -210,6 +232,14 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout }) => {
                 onClose={() => setIsPackingOpen(false)}
                 onUpdateProgress={setPackingProgress}
             />
+
+            {user && (
+                <UserProfileModal
+                    isOpen={isProfileOpen}
+                    onClose={() => setIsProfileOpen(false)}
+                    user={user}
+                />
+            )}
         </header>
     );
 };
