@@ -26,7 +26,9 @@ import {
     Save,
     Pencil,
     MapPin,
-    Trash2
+    Trash2,
+    Link as LinkIcon,
+    Minus
 } from 'lucide-react';
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, query, orderBy, onSnapshot, Timestamp, increment, arrayUnion, arrayRemove, setDoc } from "firebase/firestore";
 import {
@@ -88,14 +90,21 @@ const ItineraryView = ({
         type: ItineraryItem['type'];
         description: string;
         location: string;
+        title: string;
+        type: ItineraryItem['type'];
+        description: string;
+        location: string;
         timezone: 'Asia/Taipei' | 'Asia/Tokyo';
+        relatedLinks: { title: string; url: string }[];
     }>({
         time: '12:00',
         title: '',
         type: 'play',
         description: '',
         location: '',
-        timezone: 'Asia/Tokyo'
+        location: '',
+        timezone: 'Asia/Tokyo',
+        relatedLinks: []
     });
 
     // Seed Data Handler
@@ -121,7 +130,8 @@ const ItineraryView = ({
 
             description: item.description,
             location: item.location || '',
-            timezone: item.timezone || 'Asia/Tokyo'
+            timezone: item.timezone || 'Asia/Tokyo',
+            relatedLinks: item.relatedLinks || []
         });
         setIsModalOpen(true);
     };
@@ -129,7 +139,7 @@ const ItineraryView = ({
     // Open modal for creating
     const handleCreateClick = () => {
         setEditingId(null);
-        setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
+        setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo', relatedLinks: [] });
         setIsModalOpen(true);
     };
 
@@ -176,7 +186,7 @@ const ItineraryView = ({
 
             // Reset and close
             // Reset and close
-            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo', relatedLinks: [] });
             setEditingId(null);
             setEditingId(null);
             setIsModalOpen(false);
@@ -200,7 +210,7 @@ const ItineraryView = ({
                 items: updatedItems
             }, { merge: true });
 
-            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo' });
+            setNewItem({ time: '12:00', title: '', type: 'play', description: '', location: '', timezone: 'Asia/Tokyo', relatedLinks: [] });
             setEditingId(null);
             setIsModalOpen(false);
         } catch (error) {
@@ -289,6 +299,25 @@ const ItineraryView = ({
                                             </div>
                                         </div>
                                         <p className="text-sm text-slate-500 mt-1 leading-snug">{item.description}</p>
+
+                                        {/* Related Links */}
+                                        {item.relatedLinks && item.relatedLinks.length > 0 && (
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {item.relatedLinks.map((link, lIdx) => (
+                                                    <a
+                                                        key={lIdx}
+                                                        href={link.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-100"
+                                                    >
+                                                        <LinkIcon size={12} />
+                                                        {link.title}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -426,6 +455,58 @@ const ItineraryView = ({
                                         onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-cyan-400 outline-none placeholder:text-slate-300 resize-none"
                                     />
+                                </div>
+
+                                {/* Related Links Editor */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        <LinkIcon size={14} /> 相關連結
+                                    </label>
+                                    <div className="space-y-2">
+                                        {newItem.relatedLinks.map((link, idx) => (
+                                            <div key={idx} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="標題 (例: 部落格)"
+                                                    value={link.title}
+                                                    onChange={(e) => {
+                                                        const updated = [...newItem.relatedLinks];
+                                                        updated[idx].title = e.target.value;
+                                                        setNewItem({ ...newItem, relatedLinks: updated });
+                                                    }}
+                                                    className="w-1/3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                                                />
+                                                <input
+                                                    type="url"
+                                                    placeholder="網址 (https://...)"
+                                                    value={link.url}
+                                                    onChange={(e) => {
+                                                        const updated = [...newItem.relatedLinks];
+                                                        updated[idx].url = e.target.value;
+                                                        setNewItem({ ...newItem, relatedLinks: updated });
+                                                    }}
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const updated = newItem.relatedLinks.filter((_, i) => i !== idx);
+                                                        setNewItem({ ...newItem, relatedLinks: updated });
+                                                    }}
+                                                    className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100"
+                                                >
+                                                    <Minus size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewItem({ ...newItem, relatedLinks: [...newItem.relatedLinks, { title: '', url: '' }] })}
+                                            className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1"
+                                        >
+                                            <Plus size={14} /> 新增連結
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-3 mt-2">

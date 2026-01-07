@@ -8,6 +8,10 @@ export interface ItineraryItem {
     lat?: number;
     lng?: number;
     timezone?: 'Asia/Taipei' | 'Asia/Tokyo';
+    relatedLinks?: {
+        title: string;
+        url: string;
+    }[];
 }
 
 export interface WishlistItem {

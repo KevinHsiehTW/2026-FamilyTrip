@@ -10,6 +10,10 @@ export interface ItineraryItem {
     location?: string;
     cost?: string;
     timezone?: 'Asia/Taipei' | 'Asia/Tokyo';
+    relatedLinks?: {
+        title: string;
+        url: string;
+    }[];
 }
 
 export interface DaySchedule {
@@ -28,7 +32,18 @@ const INITIAL_DATA: DaySchedule[] = [
             { id: "d1-3", time: "12:30", title: "午餐：豬肉蛋飯糰", type: "food", description: "牧志市場店 (Pork Tamago Onigiri)。經典沖繩美食。", location: "https://www.google.com/maps/place/Pork+Tamago+Onigiri+-+Makishi+Market/@26.2146914,127.686522,17z" },
             { id: "d1-4", time: "14:00", title: "國際通漫遊", type: "play", description: "那霸市區逛街，單軌沿線景點。", location: "https://www.google.com/maps/place/Kokusai-dori/@26.216347,127.687285,17z" },
             { id: "d1-5", time: "15:00", title: "入住：As Bld", type: "stay", description: "住宿 Check-in (那霸市區)。", location: "https://www.google.com/maps/place/Naha/@26.2123,127.6789,17z" },
-            { id: "d1-6", time: "18:00", title: "晚餐：燒肉大餐", type: "food", description: "慶祝第一晚！(找有非牛/非海鮮選項的店)", location: "https://www.google.com/maps/place/Yakiniku/@26.2185,127.6890,17z" },
+            {
+                id: "d1-6",
+                time: "18:00",
+                title: "晚餐：燒肉大餐",
+                type: "food",
+                description: "慶祝第一晚！(找有非牛/非海鮮選項的店)",
+                location: "https://www.google.com/maps/place/Yakiniku/@26.2185,127.6890,17z",
+                relatedLinks: [
+                    { title: "沖繩燒肉推薦", url: "https://example.com/okinawa-bbq" },
+                    { title: "菜單預覽", url: "https://example.com/menu" }
+                ]
+            },
         ]
     },
     {
