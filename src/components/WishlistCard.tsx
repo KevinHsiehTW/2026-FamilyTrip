@@ -35,9 +35,16 @@ export const WishlistCard: React.FC<Props> = ({ item, user, onVote, onDelete }) 
 
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group transition-all hover:shadow-md">
-            <span className={`font-medium transition-colors ${confirmDelete ? 'text-slate-300' : 'text-slate-700'}`}>
-                {item.name}
-            </span>
+            <div className="flex flex-col">
+                <span className={`font-medium transition-colors ${confirmDelete ? 'text-slate-300' : 'text-slate-700'}`}>
+                    {item.name}
+                </span>
+                {item.creatorName && (
+                    <span className="text-[10px] text-slate-400 font-medium">
+                        by {item.creatorName}
+                    </span>
+                )}
+            </div>
 
             <div className="flex items-center gap-3">
                 {isOwner && (
@@ -66,8 +73,8 @@ export const WishlistCard: React.FC<Props> = ({ item, user, onVote, onDelete }) 
                     onClick={() => onVote(item)}
                     disabled={confirmDelete}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all active:scale-95 ${isVoted
-                            ? 'bg-rose-100 text-rose-500 shadow-inner ring-1 ring-rose-200'
-                            : 'bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-400'
+                        ? 'bg-rose-100 text-rose-500 shadow-inner ring-1 ring-rose-200'
+                        : 'bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-400'
                         } ${confirmDelete ? 'opacity-30 pointer-events-none' : ''}`}
                 >
                     <Heart size={16} className={`transition-all ${isVoted ? 'fill-rose-500 scale-110' : 'fill-transparent'}`} />

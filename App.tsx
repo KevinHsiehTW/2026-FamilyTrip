@@ -591,6 +591,7 @@ const WishlistView = ({ user }: { user: FirebaseUser | null }) => {
                 name: newWish,
                 votes: 1,
                 createdBy: user?.uid,
+                creatorName: user?.displayName || '匿名',
                 votedBy: user ? [user.uid] : []
             };
             setWishes(prev => [...prev, newItem].sort((a, b) => b.votes - a.votes));
@@ -604,6 +605,7 @@ const WishlistView = ({ user }: { user: FirebaseUser | null }) => {
                 votes: 1,
                 createdAt: Timestamp.now(),
                 createdBy: user?.uid,
+                creatorName: user?.displayName || '匿名',
                 votedBy: user ? [user.uid] : []
             });
             setNewWish('');

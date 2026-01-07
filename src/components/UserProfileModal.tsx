@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { User as FirebaseUser, updateProfile } from 'firebase/auth';
+import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import { db } from '../../firebase';
 import { X, Save, User as UserIcon, Loader2 } from 'lucide-react';
 
 interface Props {
@@ -25,6 +27,22 @@ export const UserProfileModal: React.FC<Props> = ({ isOpen, onClose, user }) => 
             await updateProfile(user, {
                 displayName: displayName
             });
+
+            // Update all wishlist items created by this user
+            if (db) {
+                const q = query(collection(db, "wishlist"), where("createdBy", "==", user.uid));
+                const querySnapshot = await getDocs(q);
+
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => {
+                    batch.update(doc.ref, { creatorName: displayName });
+                });
+
+                if (!querySnapshot.empty) {
+                    await batch.commit();
+                }
+            }
+
             setMessage({ type: 'success', text: '個人資料更新成功！' });
             setTimeout(() => {
                 onClose();

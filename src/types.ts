@@ -19,6 +19,7 @@ export interface WishlistItem {
     name: string;
     votes: number;
     createdBy?: string;
+    creatorName?: string;
     votedBy?: string[];
 }
 

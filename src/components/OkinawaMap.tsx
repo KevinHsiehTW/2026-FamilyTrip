@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { ItineraryItem } from '../types';
 import { extractCoordinates } from '../utils/geo';
-import { Coffee, BedDouble, Car, Camera, MapPin } from 'lucide-react';
+import { Utensils, BedDouble, Car, Camera, MapPin } from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 // Fix for default marker icons in Vite/Webpack
@@ -34,7 +34,7 @@ const createCustomIcon = (type: ItineraryItem['type']) => {
     switch (type) {
         case 'food':
             color = '#f97316'; // orange
-            icon = <Coffee size={24} color="white" />;
+            icon = <Utensils size={24} color="white" />;
             break;
         case 'stay':
             color = '#6366f1'; // indigo
