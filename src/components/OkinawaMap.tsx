@@ -76,7 +76,8 @@ const createCustomIcon = (type: ItineraryItem['type']) => {
 };
 
 interface Props {
-    itineraryData: Record<number, ItineraryItem[]>;
+    itineraryData?: Record<number, ItineraryItem[]>;
+    items?: ItineraryItem[];
     highlightedItemId?: string | null;
 }
 
@@ -90,10 +91,17 @@ const MapEffect = ({ center }: { center: [number, number] | null }) => {
     return null;
 };
 
-export const OkinawaMap: React.FC<Props> = ({ itineraryData, highlightedItemId }) => {
+export const OkinawaMap: React.FC<Props> = ({ itineraryData, items, highlightedItemId }) => {
     // Process items to get valid coordinates
     const mapItems = useMemo(() => {
-        const allItems = Object.values(itineraryData).flat();
+        let allItems: ItineraryItem[] = [];
+
+        if (items) {
+            allItems = items;
+        } else if (itineraryData) {
+            allItems = Object.values(itineraryData).flat();
+        }
+
         return allItems.map(item => {
             const coords = item.lat && item.lng
                 ? [item.lat, item.lng] as [number, number]
@@ -103,7 +111,7 @@ export const OkinawaMap: React.FC<Props> = ({ itineraryData, highlightedItemId }
                 coords
             };
         }).filter(item => item.coords !== null);
-    }, [itineraryData]);
+    }, [itineraryData, items]);
 
     const highlightedItem = useMemo(() => {
         if (!highlightedItemId) return null;
