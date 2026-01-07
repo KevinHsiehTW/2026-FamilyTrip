@@ -28,7 +28,8 @@ import {
     MapPin,
     Trash2,
     Link as LinkIcon,
-    Minus
+    Minus,
+    Sparkles
 } from 'lucide-react';
 import { collection, getDocs, addDoc, updateDoc, doc, deleteDoc, query, orderBy, onSnapshot, Timestamp, increment, arrayUnion, arrayRemove, setDoc } from "firebase/firestore";
 import {
@@ -46,6 +47,8 @@ import { BentoHeader } from './src/components/BentoHeader';
 import { WishlistCard } from './src/components/WishlistCard';
 import { ChatInterface } from './src/components/ChatInterface';
 import { ItineraryDetailModal } from './src/components/ItineraryDetailModal';
+import { AdminChatView } from './src/components/AdminChatView';
+import { ChevronRight } from 'lucide-react';
 
 // --- CONFIGURATION ---
 
@@ -793,11 +796,29 @@ export default function App() {
         }
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
-            if (currentUser && currentUser.email) {
-                const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
-                    .split(',')
-                    .map((e: string) => e.trim());
-                setIsAdmin(adminEmails.includes(currentUser.email));
+
+            if (currentUser) {
+                // 1. Check Custom Claim (Option 2 - The robust way)
+                let isUserAdmin = false;
+                try {
+                    // Force refresh token to ensure we get the latest claims if they just ran the script
+                    const tokenResult = await currentUser.getIdTokenResult(true);
+                    if (tokenResult.claims.admin) {
+                        isUserAdmin = true;
+                    }
+                } catch (error) {
+                    console.error("Error checking claims:", error);
+                }
+
+                // 2. Fallback to .env (Option 1 - Simple local dev)
+                if (!isUserAdmin) {
+                    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',');
+                    if (currentUser.email && adminEmails.includes(currentUser.email)) {
+                        isUserAdmin = true;
+                    }
+                }
+
+                setIsAdmin(isUserAdmin);
             } else {
                 setIsAdmin(false);
             }
@@ -884,7 +905,13 @@ export default function App() {
         <div className="h-screen w-full font-sans text-slate-800 flex flex-col overflow-hidden max-w-md mx-auto shadow-2xl relative bg-transparent">
 
             {/* Bento Grid Header */}
-            <BentoHeader user={user} onLogin={handleGoogleLogin} onLogout={handleLogout} isAdmin={isAdmin} />
+            <BentoHeader
+                user={user}
+                onLogin={handleGoogleLogin}
+                onLogout={handleLogout}
+                isAdmin={isAdmin}
+                onAdminChatClick={() => setActiveTab('admin-chat')}
+            />
 
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden mt-2 z-10 flex flex-col rounded-t-3xl bg-slate-50 shadow-inner">
@@ -899,32 +926,58 @@ export default function App() {
                         />
                     )}
                     {activeTab === 'wishlist' && <WishlistView user={user} />}
-                    {activeTab === 'map' && <MapView items={itineraryData[day] || []} />}
+                    {activeTab === 'map' && <OkinawaMap itineraryData={itineraryData} />}
                     {activeTab === 'assistant' && <ChatInterface itineraryData={itineraryData} />}
+
+                    {/* Admin Chat View Overlay */}
+                    {activeTab === 'admin-chat' && (
+                        <div className="absolute inset-0 bg-white z-50 p-4 animate-fade-in">
+                            <AdminChatView />
+                        </div>
+                    )}
                 </div>
             </main>
 
             {/* Bottom Dock Navigation */}
-            <div className="absolute bottom-6 left-6 right-6 h-20 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] shadow-2xl shadow-slate-300/50 flex justify-between items-center px-6 z-30">
-                {[
-                    { id: 'itinerary', icon: Calendar, label: '行程' },
-                    { id: 'wishlist', icon: Heart, label: '許願' },
-                    { id: 'map', icon: Map, label: '地圖' },
-                    { id: 'assistant', icon: MessageCircle, label: '導遊' },
-                ].map((tab) => (
+            {/* Hide Dock if in Admin View */}
+            {activeTab !== 'admin-chat' && (
+                <div className="px-6 pb-8 pt-2 bg-slate-50 relative z-20">
+                    <div className="bg-white rounded-2xl shadow-xl shadow-slate-200 p-2 flex justify-around items-center border border-slate-100 relative">
+                        {/* Tab Indicators */}
+                        {[
+                            { id: 'itinerary', icon: Map, label: '行程' },
+                            { id: 'wishlist', icon: Heart, label: '許願' },
+                            { id: 'map', icon: MapPin, label: '地圖' },
+                            { id: 'assistant', icon: Sparkles, label: '導遊' },
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as Tab)}
+                                className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 active:scale-95 ${activeTab === tab.id
+                                    ? 'bg-gradient-to-tr from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-200 -translate-y-2'
+                                    : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
+                                    }`}
+                            >
+                                <tab.icon size={24} className={activeTab === tab.id ? "stroke-[2.5px]" : "stroke-2"} />
+                                <span className={`text-[10px] font-bold mt-1 transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-60'}`}>{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Back Button for Admin View */}
+            {activeTab === 'admin-chat' && (
+                <div className="px-6 pb-8 pt-2 bg-slate-50 relative z-20">
                     <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as Tab)}
-                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 active:scale-90 ${activeTab === tab.id
-                            ? 'bg-gradient-to-tr from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-200 -translate-y-4'
-                            : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
-                            }`}
+                        onClick={() => setActiveTab('itinerary')}
+                        className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2"
                     >
-                        <tab.icon size={24} className={activeTab === tab.id ? "stroke-[2.5px]" : "stroke-2"} />
-                        {activeTab !== tab.id && <span className="text-[9px] font-bold mt-1 opacity-60">{tab.label}</span>}
+                        <ChevronRight className="rotate-180" />
+                        返回行程表
                     </button>
-                ))}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

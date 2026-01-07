@@ -9,9 +9,10 @@ interface Props {
     onLogin: () => void;
     onLogout: () => void;
     isAdmin?: boolean;
+    onAdminChatClick?: () => void;
 }
 
-export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout, isAdmin }) => {
+export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout, isAdmin, onAdminChatClick }) => {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number }>({ days: 0, hours: 0 });
     const [weather, setWeather] = useState<{ temp: number, desc: string, icon: string } | null>(null);
     const [isPackingOpen, setIsPackingOpen] = useState(false);
@@ -123,6 +124,22 @@ export const BentoHeader: React.FC<Props> = ({ user, onLogin, onLogout, isAdmin 
                                     </div>
                                 )}
                             </div>
+
+                            {/* Admin Link */}
+                            {isAdmin && (
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        onAdminChatClick?.();
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                        <ShieldCheck size={16} />
+                                    </div>
+                                    <span className="font-bold text-sm">導遊對話紀錄</span>
+                                </button>
+                            )}
 
                             <button
                                 onClick={() => {

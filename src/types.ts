@@ -30,4 +30,4 @@ export interface ChatMessage {
     timestamp: number;
 }
 
-export type Tab = 'itinerary' | 'wishlist' | 'map' | 'assistant';
+export type Tab = 'itinerary' | 'wishlist' | 'map' | 'assistant' | 'admin-chat';
