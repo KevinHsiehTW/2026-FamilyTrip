@@ -224,7 +224,7 @@ export const ChatInterface: React.FC<Props> = ({ itineraryData }) => {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 pb-32 bg-slate-50 border-t border-slate-100 shrink-0">
+            <div className="p-4 pb-4 bg-slate-50 border-t border-slate-100 shrink-0">
                 <form
                     onSubmit={handleSend}
                     className="flex gap-2 bg-white p-2 rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 ring-1 ring-slate-100 focus-within:ring-2 focus-within:ring-violet-200 transition-all"
