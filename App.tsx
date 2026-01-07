@@ -7,7 +7,6 @@ import {
     MessageCircle,
     Sun,
     JapaneseYen,
-    Coffee,
     BedDouble,
     Car,
     Camera,
@@ -15,6 +14,7 @@ import {
     User,
     Bot,
     LogOut,
+    Utensils,
     Plane,
     CloudSun,
     Plus,
@@ -58,7 +58,7 @@ import { ItineraryDetailModal } from './src/components/ItineraryDetailModal';
 // 1. Icon Helper
 const ActivityIcon = ({ type }: { type: ItineraryItem['type'] }) => {
     switch (type) {
-        case 'food': return <div className="p-2 bg-orange-100 text-orange-500 rounded-full"><Coffee size={18} /></div>;
+        case 'food': return <div className="p-2 bg-orange-100 text-orange-500 rounded-full"><Utensils size={18} /></div>;
         case 'stay': return <div className="p-2 bg-indigo-100 text-indigo-500 rounded-full"><BedDouble size={18} /></div>;
         case 'move': return <div className="p-2 bg-blue-100 text-blue-500 rounded-full"><Car size={18} /></div>;
         case 'play': return <div className="p-2 bg-pink-100 text-pink-500 rounded-full"><Camera size={18} /></div>;
@@ -422,7 +422,7 @@ const ItineraryView = ({
                                     </label>
                                     <div className="flex gap-2">
                                         {[
-                                            { id: 'food', icon: Coffee, label: '吃', color: 'bg-orange-100 text-orange-500' },
+                                            { id: 'food', icon: Utensils, label: '吃', color: 'bg-orange-100 text-orange-500' },
                                             { id: 'stay', icon: BedDouble, label: '住', color: 'bg-indigo-100 text-indigo-500' },
                                             { id: 'move', icon: Car, label: '行', color: 'bg-blue-100 text-blue-500' },
                                             { id: 'play', icon: Camera, label: '玩', color: 'bg-pink-100 text-pink-500' },
